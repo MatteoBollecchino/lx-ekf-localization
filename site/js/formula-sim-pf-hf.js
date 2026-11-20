@@ -317,12 +317,12 @@
       });
     },
 
-    // 12. HF: GRID SHIFT & BLUR
+    // 12. HF: histogram_predict (Encoder Shift & Gaussian Filter)
     'hf-predict': function (container, lang) {
       var N = 9;
       function buildPredGrid(s, tFrac) {
-        var shiftR = (s.v * Math.sin(H.degToRad(s.phiDeg)) * 0.7) * tFrac * 8.0;
-        var shiftC = (s.omega * 0.7) * tFrac * 3.0;
+        var shiftR = (s.dA * Math.sin(H.degToRad(s.phiDeg))) * tFrac * 8.0;
+        var shiftC = s.w * tFrac * 3.0;
         var cr = 4 - shiftR;
         var cc = 4 + shiftC;
         var sig = H.lerp(0.55, s.blur, tFrac);
@@ -339,39 +339,39 @@
       }
 
       return H.mountCanvasSim(container, lang, {
-        defaults: { v: 0.45, phiDeg: 18, omega: 0.35, blur: 1.15 },
+        defaults: { dA: 0.35, phiDeg: 18, w: 0.25, blur: 1.15 },
         defaultPresetIdx: 0,
         guide: {
-          it: '<strong>Cosa osservare:</strong> partendo dalla cella centrale (riquadro grigio), avanzare con angolo <code>φ</code> sposta la massa nella griglia, mentre la convoluzione <code>* G_Q</code> la sfoca sulle celle vicine.',
-          en: '<strong>What to watch:</strong> starting from the center cell (slate outline), driving at angle <code>φ</code> shifts probability across the grid, while convolution <code>* G_Q</code> blurs it into neighboring cells.'
+          it: '<strong>Cosa osservare:</strong> gli encoder danno avanzamento <code>d_A</code> e rotazione <code>w</code>. Ogni cella (riquadro grigio) trasla di <code>(d_A sin(φ̂), w)</code> e poi <code>gaussian_filter(..., cov_mask)</code> sfoca la massa sulle celle vicine.',
+          en: '<strong>What to watch:</strong> wheel encoders yield forward arc <code>d_A</code> and turn <code>w</code>. Each cell (slate outline) shifts by <code>(d_A sin(φ̂), w)</code> and <code>gaussian_filter(..., cov_mask)</code> blurs mass into neighbors.'
         },
         legend: {
-          it: '<span class="leg-slate">■ Cella iniziale</span><span class="leg-gold">■ Massa traslata + sfocata (* G_Q)</span>',
-          en: '<span class="leg-slate">■ Starting cell</span><span class="leg-gold">■ Shifted + blurred mass (* G_Q)</span>'
+          it: '<span class="leg-slate">■ Cella iniziale</span><span class="leg-gold">■ Massa traslata + gaussian_filter(cov_mask)</span>',
+          en: '<span class="leg-slate">■ Starting cell</span><span class="leg-gold">■ Shifted mass + gaussian_filter(cov_mask)</span>'
         },
         presets: {
           it: [
-            { label: 'Traslazione + Blur', vals: { v: 0.45, phiDeg: 18, omega: 0.35, blur: 1.15 } },
-            { label: 'Sfocatura Forte', vals: { v: 0.30, phiDeg: 10, omega: -0.20, blur: 2.10 } }
+            { label: 'Traslazione + cov_mask', vals: { dA: 0.35, phiDeg: 18, w: 0.25, blur: 1.15 } },
+            { label: 'cov_mask Forte', vals: { dA: 0.22, phiDeg: 10, w: -0.15, blur: 2.10 } }
           ],
           en: [
-            { label: 'Shift + Blur', vals: { v: 0.45, phiDeg: 18, omega: 0.35, blur: 1.15 } },
-            { label: 'Heavy Diffusion', vals: { v: 0.30, phiDeg: 10, omega: -0.20, blur: 2.10 } }
+            { label: 'Shift + cov_mask', vals: { dA: 0.35, phiDeg: 18, w: 0.25, blur: 1.15 } },
+            { label: 'Heavy cov_mask', vals: { dA: 0.22, phiDeg: 10, w: -0.15, blur: 2.10 } }
           ]
         },
         sliders: [
-          { key: 'v', min: 0.1, max: 0.7, step: 0.05, labelIt: 'Velocità v', labelEn: 'Speed v', fmt: function (v) { return v.toFixed(2) + ' m/s'; } },
-          { key: 'phiDeg', min: -30, max: 30, step: 2, labelIt: 'Angolo φ', labelEn: 'Heading φ', fmt: function (v) { return H.signedFixed(v, 0) + '°'; } },
-          { key: 'omega', min: -0.8, max: 0.8, step: 0.05, labelIt: 'Sterzo ω', labelEn: 'Turn rate ω', fmt: function (v) { return H.signedFixed(v, 2); } },
-          { key: 'blur', min: 0.6, max: 2.3, step: 0.1, labelIt: 'Ampiezza kernel G_Q', labelEn: 'Blur kernel G_Q', fmt: function (v) { return v.toFixed(1) + ' cells'; } }
+          { key: 'dA', min: 0.05, max: 0.55, step: 0.05, labelIt: 'Avanzamento d_A', labelEn: 'Encoder arc d_A', fmt: function (v) { return v.toFixed(2) + ' m'; } },
+          { key: 'phiDeg', min: -30, max: 30, step: 2, labelIt: 'Angolo stimato φ̂', labelEn: 'Estimated φ̂', fmt: function (v) { return H.signedFixed(v, 0) + '°'; } },
+          { key: 'w', min: -0.6, max: 0.6, step: 0.05, labelIt: 'Rotazione encoder w', labelEn: 'Encoder turn w', fmt: function (v) { return H.signedFixed(v, 2) + ' rad'; } },
+          { key: 'blur', min: 0.6, max: 2.3, step: 0.1, labelIt: 'Sfocatura cov_mask', labelEn: 'Blur cov_mask', fmt: function (v) { return v.toFixed(1) + ' cells'; } }
         ],
         renderEq: function (s, tFrac) {
-          var dd = s.v * Math.sin(H.degToRad(s.phiDeg)) * 0.7 * tFrac;
-          var dp = s.omega * 0.7 * tFrac;
+          var dd = s.dA * Math.sin(H.degToRad(s.phiDeg)) * tFrac;
+          var dp = s.w * tFrac;
           return (
             '\\begin{aligned}' +
-            '\\Delta d &= ' + H.signedFixed(dd, 3) + '\\text{ m}, \\qquad \\Delta\\varphi = ' + H.signedFixed(H.radToDeg(dp), 1) + '^\\circ \\\\[4pt]' +
-            '\\overline{\\operatorname{bel}} &= \\operatorname{shift}(\\operatorname{bel}) * G_Q(\\sigma=' + H.lerp(0.55, s.blur, tFrac).toFixed(2) + ')' +
+            '\\Delta d &= d_A\\sin(\\hat{\\varphi}) = ' + H.signedFixed(dd, 3) + '\\text{ m}, \\quad w = ' + H.signedFixed(H.radToDeg(dp), 1) + '^\\circ \\\\[4pt]' +
+            '\\overline{\\operatorname{bel}} &= \\operatorname{shift}(\\operatorname{bel}) * G_{\\text{cov\\_mask}}(\\sigma=' + H.lerp(0.55, s.blur, tFrac).toFixed(2) + ')' +
             '\\end{aligned}'
           );
         },
@@ -398,41 +398,43 @@
       });
     },
 
-    // 13. HF: SEGMENT VOTE
+    // 13. HF: generate_vote (Tangent/Normal + Tape Width + Half-Lane)
     'hf-vote': function (container, lang) {
       return H.mountCanvasSim(container, lang, {
-        defaults: { dx: 0.14, dy: 0.48, isYellow: 1 },
+        defaults: { ty: 0.28, lw: 0.04, isYellow: 1 },
         defaultPresetIdx: 0,
         guide: {
-          it: '<strong>Cosa osservare:</strong> l’inclinazione del segmento a terra <code>(Δx, Δy)</code> fornisce l’angolo <code>φ_i</code>, poi il colore sposta la stima verso il centro corsia (<span class="leg-gold">+w/2</span> se giallo a sinistra, <code>−w/2</code> se bianco a destra).',
-          en: '<strong>What to watch:</strong> the ground segment slope <code>(Δx, Δy)</code> yields heading <code>φ_i</code>, then line color shifts the estimate to lane center (<span class="leg-gold">+w/2</span> if yellow divider, <code>−w/2</code> if white outer edge).'
+          it: '<strong>Cosa osservare:</strong> da <code>p₁ → p₂</code> calcoliamo il versore tangente <code>t̂</code> (giallo/bianco) e la normale <code>n̂</code> (blu) per <code>d_seg</code>. L’angolo è <code>φ_i = arcsin(t_y)</code>; poi sottraiamo lo spessore vernice <code>w_paint</code> e spostiamo di <code>±w_lane/2</code> verso il centro corsia.',
+          en: '<strong>What to watch:</strong> from <code>p₁ → p₂</code> we compute unit tangent <code>t̂</code> (yellow/white) and normal <code>n̂</code> (blue) for <code>d_seg</code>. Heading is <code>φ_i = arcsin(t_y)</code>; we then subtract tape width <code>w_paint</code> and shift by <code>±w_lane/2</code> to lane center.'
         },
         legend: {
-          it: '<span class="leg-gold">■ Segmento proiettato (Δx, Δy)</span><span class="leg-coral">■ Centro corsia stimato (±w/2)</span>',
-          en: '<span class="leg-gold">■ Projected segment (Δx, Δy)</span><span class="leg-coral">■ Inferred lane center (±w/2)</span>'
+          it: '<span class="leg-gold">■ Tangente t̂ (p₁→p₂)</span><span class="leg-blue">■ Normale n̂ (d_seg)</span><span class="leg-coral">■ −w_paint ± w_lane/2</span>',
+          en: '<span class="leg-gold">■ Unit tangent t̂ (p₁→p₂)</span><span class="leg-blue">■ Normal n̂ (d_seg)</span><span class="leg-coral">■ −w_paint ± w_lane/2</span>'
         },
         presets: {
           it: [
-            { label: 'Segmento Giallo (+w/2)', vals: { dx: 0.14, dy: 0.48, isYellow: 1 } },
-            { label: 'Bordo Bianco (-w/2)', vals: { dx: -0.14, dy: 0.48, isYellow: 0 } }
+            { label: 'Segmento Giallo (+w/2)', vals: { ty: 0.28, lw: 0.04, isYellow: 1 } },
+            { label: 'Bordo Bianco (-w/2)', vals: { ty: -0.28, lw: 0.05, isYellow: 0 } }
           ],
           en: [
-            { label: 'Yellow Segment (+w/2)', vals: { dx: 0.14, dy: 0.48, isYellow: 1 } },
-            { label: 'White Border (-w/2)', vals: { dx: -0.14, dy: 0.48, isYellow: 0 } }
+            { label: 'Yellow Segment (+w/2)', vals: { ty: 0.28, lw: 0.04, isYellow: 1 } },
+            { label: 'White Border (-w/2)', vals: { ty: -0.28, lw: 0.05, isYellow: 0 } }
           ]
         },
         sliders: [
-          { key: 'dx', min: -0.25, max: 0.25, step: 0.02, labelIt: 'Vettore Δx', labelEn: 'Vector Δx', fmt: function (v) { return H.signedFixed(v, 2) + ' m'; } },
-          { key: 'dy', min: 0.25, max: 0.70, step: 0.05, labelIt: 'Vettore Δy', labelEn: 'Vector Δy', fmt: function (v) { return v.toFixed(2) + ' m'; } },
-          { key: 'isYellow', min: 0, max: 1, step: 1, labelIt: 'Tipo (0=Bianco, 1=Giallo)', labelEn: 'Type (0=White, 1=Yellow)', fmt: function (v) { return v >= 0.5 ? 'Giallo (+w/2)' : 'Bianco (-w/2)'; } }
+          { key: 'ty', min: -0.50, max: 0.50, step: 0.02, labelIt: 'Componente tangente t_y', labelEn: 'Tangent component t_y', fmt: function (v) { return H.signedFixed(v, 2); } },
+          { key: 'lw', min: 0.00, max: 0.08, step: 0.01, labelIt: 'Spessore striscia w_paint', labelEn: 'Tape width w_paint', fmt: function (v) { return v.toFixed(2) + ' m'; } },
+          { key: 'isYellow', min: 0, max: 1, step: 1, labelIt: 'Colore (0=Bianco, 1=Giallo)', labelEn: 'Color (0=White, 1=Yellow)', fmt: function (v) { return v >= 0.5 ? 'Yellow' : 'White'; } }
         ],
         renderEq: function (s, tFrac) {
-          var phi = Math.PI / 2 - Math.atan2(Math.abs(s.dx * tFrac), s.dy);
-          var shift = (s.isYellow >= 0.5 ? 0.12 : -0.12) * tFrac;
+          var tyEff = H.clamp(s.ty * tFrac, -0.95, 0.95);
+          var phi = Math.asin(tyEff);
+          var isY = s.isYellow >= 0.5;
+          var shift = (isY ? 0.11 : -0.11) * tFrac - (isY ? 1 : -1) * s.lw * tFrac;
           return (
             '\\begin{aligned}' +
-            '\\varphi_i &= \\frac{\\pi}{2} - \\operatorname{atan2}(|' + (s.dx * tFrac).toFixed(2) + '|, ' + s.dy.toFixed(2) + ') = {\\color{#ffd000}' + H.radToDeg(phi).toFixed(1) + '^\\circ} \\\\[4pt]' +
-            'd_i &= d_{\\text{seg}} ' + (s.isYellow >= 0.5 ? '+' : '-') + ' \\frac{w_{\\text{lane}}}{2} \\;(' + H.signedFixed(shift, 2) + '\\text{ m})' +
+            '\\varphi_i &= \\arcsin(t_y = ' + H.signedFixed(tyEff, 2) + ') = {\\color{#ffd000}' + H.radToDeg(phi).toFixed(1) + '^\\circ} \\\\[4pt]' +
+            'd_i &= \\pm d_{\\text{seg}} - w_{\\text{paint}}(' + s.lw.toFixed(2) + ') ' + (isY ? '+ \\frac{w_{\\text{lane}}}{2}' : '- \\frac{w_{\\text{lane}}}{2}') + ' \\;(' + H.signedFixed(shift, 2) + '\\text{ m})' +
             '\\end{aligned}'
           );
         },
@@ -441,17 +443,26 @@
           ctx.fillRect(0, 0, w, h);
           var ox = w * 0.5;
           var oy = h * 0.78;
-          var scale = Math.min(w, h) * 0.8;
+          var scale = Math.min(w, h) * 0.65;
           var isY = s.isYellow >= 0.5;
           var segColor = isY ? '#ffd000' : '#f4f4f6';
-          var xEnd = ox + s.dx * tFrac * scale;
-          var yEnd = oy - s.dy * scale;
+          var tyEff = H.clamp(s.ty * tFrac, -0.95, 0.95);
+          var txEff = Math.sqrt(Math.max(0.01, 1 - tyEff * tyEff));
 
+          var xEnd = ox + tyEff * scale * 0.72;
+          var yEnd = oy - txEff * scale * 0.72;
           H.drawArrow(ctx, ox, oy, xEnd, yEnd, segColor, 3.0);
-          var laneX = ox + (isY ? 0.12 : -0.12) * tFrac * scale;
-          H.drawArrow(ctx, ox, oy - 30, laneX, oy - 30, '#e07a5f', 2.4, [4, 3]);
-          H.drawPill(ctx, isY ? '+w/2' : '-w/2', (ox + laneX) * 0.5, oy - 48, '#e07a5f');
-          H.drawPill(ctx, 'φ_i = ' + H.radToDeg(Math.PI / 2 - Math.atan2(Math.abs(s.dx * tFrac), s.dy)).toFixed(1) + '°', xEnd, yEnd - 16, segColor);
+
+          // Unit normal n_hat = [-t_y, t_x] drawn perpendicular to t_hat
+          var nxEnd = ox - txEff * scale * 0.28;
+          var nyEnd = oy - tyEff * scale * 0.28;
+          H.drawArrow(ctx, ox, oy, nxEnd, nyEnd, '#60a5fa', 2.2);
+          H.drawPill(ctx, 'n̂', nxEnd - 12, nyEnd, '#60a5fa');
+
+          var laneX = ox + ((isY ? 0.11 : -0.11) - (isY ? 1 : -1) * s.lw) * tFrac * scale * 1.4;
+          H.drawArrow(ctx, ox, oy - 36, laneX, oy - 36, '#e07a5f', 2.4, [4, 3]);
+          H.drawPill(ctx, (isY ? '+w/2' : '-w/2') + ' − w_paint', (ox + laneX) * 0.5, oy - 54, '#e07a5f');
+          H.drawPill(ctx, 't̂ → φ_i=' + H.radToDeg(Math.asin(tyEff)).toFixed(1) + '°', xEnd, yEnd - 16, segColor);
         }
       });
     },
@@ -502,8 +513,8 @@
         defaults: { offset: 0.0, sharp: 1.0 },
         defaultPresetIdx: 0,
         guide: {
-          it: '<strong>Cosa osservare:</strong> ogni cella della predizione <span class="leg-blue">bel̄</span> viene moltiplicata per la corrispondente cella della camera <span class="leg-coral">L</span> (prodotto di Hadamard <code>⊙</code>): sopravvive solo l’intersezione <span class="leg-gold">bel_post</span> (bordata di bianco).',
-          en: '<strong>What to watch:</strong> each cell of prior <span class="leg-blue">bel̄</span> multiplies the matching cell of camera likelihood <span class="leg-coral">L</span> (Hadamard product <code>⊙</code>): only their intersection <span class="leg-gold">bel_post</span> (white outline) survives.'
+          it: '<strong>Cosa osservare:</strong> in <code>histogram_update</code>, <code>np.multiply(belief, likelihood)</code> moltiplica ogni cella di <span class="leg-blue">bel̄</span> per la corrispondente cella di <span class="leg-coral">L</span> (prodotto di Hadamard <code>⊙</code>): sopravvive solo l’intersezione <span class="leg-gold">bel_post</span>.',
+          en: '<strong>What to watch:</strong> inside <code>histogram_update</code>, <code>np.multiply(belief, likelihood)</code> multiplies each cell of <span class="leg-blue">bel̄</span> by <span class="leg-coral">L</span> (Hadamard product <code>⊙</code>): only their intersection <span class="leg-gold">bel_post</span> survives.'
         },
         legend: {
           it: '<span class="leg-blue">■ Prior bel̄</span><span class="leg-coral">■ Verosimiglianza L</span><span class="leg-gold">■ Posteriore bel̄ ⊙ L</span>',

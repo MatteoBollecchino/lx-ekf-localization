@@ -843,10 +843,10 @@
               <span data-lang-block="it">Topologia Discreta a Matrice (\(60 \times 60\))</span>
             </h4>
             <p data-lang-block="en">
-              Continuous space becomes a fixed \(3{,}600\)-cell array (28.8 KB in float64) called <code>histogram_prior</code>. Predict shifts cell probability mass via kinematics and applies a <strong>2D Gaussian Convolution blur</strong> with boundary clipping.
+              Continuous space becomes a fixed \(N = 60 \times 60\) grid of cell centroids \(x^i = (d^i, \varphi^i)\) initialized via <code>histogram_prior</code> (\(\mathcal{N}(\mu_0, \Sigma_0)\)). Mathematically, the discrete belief is a weighted sum of <strong>Dirac deltas</strong>: \(\operatorname{bel}(x_t) = \sum_{i=1}^N w_t^i\,\delta(x_t - x^i)\).
             </p>
             <p data-lang-block="it">
-              Lo spazio continuo diventa una griglia statica da \(3{,}600\) celle (28.8 KB in float64), chiamata <code>histogram_prior</code>. La predizione trasla la massa cinematica e applica una <strong>convoluzione gaussiana 2D</strong> per simulare la deriva.
+              Lo spazio continuo diventa una griglia statica di \(N = 60 \times 60\) centroidi \(x^i = (d^i, \varphi^i)\) inizializzata con <code>histogram_prior</code> (\(\mathcal{N}(\mu_0, \Sigma_0)\)). Matematicamente è una somma pesata di <strong>delta di Dirac</strong>: \(\operatorname{bel}(x_t) = \sum_{i=1}^N w_t^i\,\delta(x_t - x^i)\).
             </p>
           </div>
         </div>
@@ -904,70 +904,72 @@
         </div>
 
         <div class="math-display">
-          <div class="math-eq-row" data-eq-explain="hf-predict">
-            <div class="math-eq-col">\(\displaystyle d' = d + v\sin(\varphi)\Delta t, \quad \varphi' = \varphi + \omega\Delta t\)</div>
-            <div class="math-eq-col">\(\displaystyle \overline{\operatorname{bel}} = \operatorname{shift}(\operatorname{bel}) * G_Q\)</div>
-            <div class="math-eq-tag">(Grid Shift &amp; Blur)</div>
+          <div class="math-eq-row wide" data-eq-explain="hf-dirac">
+            <div class="math-eq-col">\(\displaystyle \operatorname{bel}(x_t) = \sum_{i=1}^N w_t^i\,\delta(x_t - x^i), \qquad x^i = (d^i, \varphi^i), \qquad \sum_{i=1}^N w_t^i = 1\)</div>
+            <div class="math-eq-tag">(Dirac Belief)</div>
           </div>
-          <div class="math-eq-row" data-eq-explain="hf-vote">
-            <div class="math-eq-col">\(\displaystyle \varphi_i = \frac{\pi}{2} - \operatorname{atan2}(|\Delta x|, \Delta y)\)</div>
-            <div class="math-eq-col">\(\displaystyle d_i = d_{\text{seg}} \pm \frac{w_{\text{lane}}}{2}\)</div>
-            <div class="math-eq-tag">(Segment Vote)</div>
+          <div class="math-eq-row wide" data-eq-explain="hf-predict">
+            <div class="math-eq-col">\(\displaystyle d_A = \frac{d_L + d_R}{2},\; w = \frac{d_R - d_L}{L}, \qquad d_t = d + d_A\sin(\hat{\varphi}),\; \varphi_t = \varphi + w, \qquad \overline{\operatorname{bel}} = \operatorname{shift}(\operatorname{bel}) * G_{\text{cov\_mask}}\)</div>
+            <div class="math-eq-tag">(histogram_predict)</div>
+          </div>
+          <div class="math-eq-row wide" data-eq-explain="hf-vote">
+            <div class="math-eq-col">\(\displaystyle \hat{t} = \frac{p_2 - p_1}{\|p_2 - p_1\|},\; \hat{n} = \begin{bmatrix} -t_y \\ t_x \end{bmatrix},\; \varphi_i = \arcsin(t_y), \qquad d_i^{\text{w/y}} = \pm d_{\text{seg}} - w_{\text{paint}} \mp \frac{w_{\text{lane}}}{2}\)</div>
+            <div class="math-eq-tag">(generate_vote)</div>
           </div>
           <div class="math-eq-row" data-eq-explain="hf-update">
             <div class="math-eq-col">\(\displaystyle \operatorname{bel}_{i,j} = \frac{\overline{\operatorname{bel}}_{i,j} \odot {\color{#e07a5f} L_{i,j}}}{\sum_{u,v} \overline{\operatorname{bel}}_{u,v} \odot L_{u,v}}\)</div>
             <div class="math-eq-col">\(\displaystyle (d^*, \varphi^*) = \arg\max_{i,j} \operatorname{bel}_{i,j}\)</div>
-            <div class="math-eq-tag">(Hadamard Update)</div>
+            <div class="math-eq-tag">(histogram_update)</div>
           </div>
         </div>
 
         <div class="walkthrough-steps">
           <div class="step-item" style="border-left:2px solid var(--slate);">
             <div class="step-idx">
-              <span data-lang-block="en">PHASE 01 · \((d, \varphi)\) GRID &amp; SHIFT + BLUR</span>
-              <span data-lang-block="it">FASE 01 · GRIGLIA \((d, \varphi)\) &amp; TRASLAZIONE + SFOCATURA</span>
+              <span data-lang-block="en">PHASE 01 · DIRAC GRID, ENCODER SHIFT &amp; GAUSSIAN FILTER</span>
+              <span data-lang-block="it">FASE 01 · GRIGLIA A DELTA DI DIRAC, SHIFT ENCODER &amp; GAUSSIAN FILTER</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              To stay inside a lane, the Duckiebot does not need room coordinates \((x, y)\): it only needs lateral offset \(d\) from lane center and angle \(\varphi\) relative to the road. We divide \((d, \varphi)\) into a fixed grid of cells. When the wheels turn by \((v\Delta t, \omega\Delta t)\), driving at an angle \(\varphi\) shifts lateral offset by \(v\sin(\varphi)\Delta t\); we shift the grid probabilities accordingly and apply a \(3\times 3\) Gaussian blur \(* G_Q\) to represent wheel slip.
+              In <code>histogram_prior</code>, each cell centroid \(x^i = (d^i, \varphi^i)\) carries weight \(w_t^i\) (\(\operatorname{bel}(x_t) = \sum w_t^i \delta(x_t - x^i)\)). In <code>histogram_predict</code>, left/right wheel encoder ticks give forward arc \(d_A = (d_L + d_R)/2\) and rotation \(w = (d_R - d_L)/L\). Every cell shifts by \((d_A\sin\hat{\varphi},\, w)\), accumulates into new bins, and is blurred by <code>gaussian_filter(..., cov_mask)</code> to model wheel slip.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Per restare in corsia al Duckiebot non serve sapere dove si trova nella stanza \((x, y)\): gli bastano lo scostamento laterale \(d\) dal centro corsia e l'angolo \(\varphi\) rispetto alla strada, discretizzati in una griglia di celle. Quando le ruote avanzano di \(v\Delta t\) con angolo \(\varphi\), lo scostamento cambia di \(v\sin(\varphi)\Delta t\): trasliamo quindi le probabilità nella griglia e applichiamo una sfocatura gaussiana \(* G_Q\) per tenere conto dello slittamento.
+              In <code>histogram_prior</code>, ogni centroide \(x^i = (d^i, \varphi^i)\) porta un peso \(w_t^i\) (\(\operatorname{bel}(x_t) = \sum w_t^i \delta(x_t - x^i)\)). In <code>histogram_predict</code>, i tick degli encoder danno l'avanzamento \(d_A = (d_L + d_R)/2\) e la rotazione \(w = (d_R - d_L)/L\): ogni cella trasla di \((d_A\sin\hat{\varphi},\, w)\) nei nuovi bin e viene sfocata con <code>gaussian_filter(..., cov_mask)</code> per modellare lo slittamento.
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--sensor);">
             <div class="step-idx">
-              <span data-lang-block="en">PHASE 02 · IMAGE TO GROUND: HOMOGRAPHY \(H_{\text{ground}}\)</span>
-              <span data-lang-block="it">FASE 02 · DALL'IMMAGINE AL SUOLO: OMOGRAFIA \(H_{\text{ground}}\)</span>
+              <span data-lang-block="en">PHASE 02 · GROUND HOMOGRAPHY &amp; TANGENT/NORMAL BASIS</span>
+              <span data-lang-block="it">FASE 02 · OMOGRAFIA AL SUOLO &amp; VERSORI \(\hat{t}, \hat{n}\)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              A single camera image contains perspective distortion: parallel lane lines appear to converge toward the horizon. After filtering yellow and white pixels in HSV space and extracting line segments via Canny + Hough, we multiply pixel coordinates by the calibrated \(3\times 3\) flat-ground homography matrix \(H_{\text{ground}}\), reconstructing the true metric vectors \((\Delta x, \Delta y)\) on the floor ahead of the robot.
+              Camera pixels are projected onto the flat ground plane via \(H_{\text{ground}}\) into metric segment endpoints \(p_1, p_2\). Inside <code>generate_vote</code>, we compute the unit tangent \(\hat{t} = (p_2 - p_1)/\|p_2 - p_1\|\) and orthogonal normal \(\hat{n} = [-t_y, t_x]^{\top}\): the dot products \(\hat{n}\cdot p_1\) and \(\hat{n}\cdot p_2\) yield perpendicular segment distance \(d_{\text{seg}}\), while \(\varphi_i = \arcsin(t_y)\) recovers lane heading.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Nell'immagine della telecamera la prospettiva deforma le distanze: le strisce parallele sembrano convergere all'orizzonte. Dopo aver isolato i colori giallo e bianco in HSV ed estratto i segmenti con Canny + Hough, moltiplichiamo i pixel per la matrice di omografia \(3\times 3\) \(H_{\text{ground}}\) (calibrata sul pavimento piatto), ottenendo i vettori reali in metri \((\Delta x, \Delta y)\) davanti al robot.
+              I pixel della camera vengono proiettati sul pavimento con l'omografia \(H_{\text{ground}}\) ottenendo gli estremi metrici \(p_1, p_2\). Dentro <code>generate_vote</code> calcoliamo il versore tangente \(\hat{t} = (p_2 - p_1)/\|p_2 - p_1\|\) e la normale ortogonale \(\hat{n} = [-t_y, t_x]^{\top}\): il prodotto scalare \(\hat{n}\cdot p\) fornisce la distanza ortogonale \(d_{\text{seg}}\) dal segmento, mentre \(\varphi_i = \arcsin(t_y)\) ricava l'angolo.
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--sensor);">
             <div class="step-idx">
-              <span data-lang-block="en">PHASE 03 · INVERSE VOTING (\(\pm w/2\)) &amp; CLUE INTERSECTION</span>
-              <span data-lang-block="it">FASE 03 · VOTO INVERSO (\(\pm w/2\)) &amp; INCROCIO INDIZI</span>
+              <span data-lang-block="en">PHASE 03 · EDGE THICKNESS (`linewidth`) &amp; LANE CENTER SHIFT</span>
+              <span data-lang-block="it">FASE 03 · SPESSORE VERNICE (`linewidth`) &amp; VOTO IN \(L_{i,j}\)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              Each projected segment casts a vote into the \((d, \varphi)\) grid via <code>Generate_Vote</code>: its slope gives angle \(\varphi_i = \tfrac{\pi}{2} - \operatorname{atan2}(|\Delta x|, \Delta y)\), while its lateral distance \(d_{\text{seg}}\) is shifted by \(+w_{\text{lane}}/2\) if the segment is <strong>yellow</strong> (left divider) or \(-w_{\text{lane}}/2\) if <strong>white</strong> (right edge). Intersecting votes from both lines cancels floor glare and locks onto a single \((d, \varphi)\) peak in \(L\).
+              Because real tape lines have finite width, edge detectors hit either the inner or outer border depending on segment direction (\(p_1[0] > p_2[0]\)). <code>generate_vote</code> flips signs accordingly, subtracts paint thickness \(w_{\text{white}}\) or \(w_{\text{yellow}}\), and shifts by \(\pm w_{\text{lane}}/2\) to reach lane center. <code>generate_measurement_likelihood</code> bins all votes into normalized \(L_{i,j}\).
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Ogni segmento proiettato a terra vota una cella \((d, \varphi)\) tramite <code>Generate_Vote</code>: la sua inclinazione fornisce l'angolo \(\varphi_i = \tfrac{\pi}{2} - \operatorname{atan2}(|\Delta x|, \Delta y)\), mentre la distanza laterale \(d_{\text{seg}}\) viene traslata di \(+w_{\text{lane}}/2\) se il segmento è <strong>giallo</strong> (mezzeria sinistra) o di \(-w_{\text{lane}}/2\) se è <strong>bianco</strong> (bordo destro). Incrociare i voti dei due lati elimina i riflessi spuri e fa emergere un unico picco in \(L(d, \varphi)\).
+              Poiché le strisce reali hanno uno spessore, Canny aggancia il bordo interno o esterno in base al verso del segmento (\(p_1[0] > p_2[0]\)). <code>generate_vote</code> regola i segni, sottrae lo spessore della vernice \(w_{\text{white}}\) o \(w_{\text{yellow}}\), e trasla di \(\pm w_{\text{lane}}/2\) fino al centro corsia. <code>generate_measurement_likelihood</code> accumula tutti i voti e normalizza \(L_{i,j}\).
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--gold);">
             <div class="step-idx">
-              <span data-lang-block="en">PHASE 04 · HADAMARD PRODUCT (\(\odot\)) &amp; BLIND INTERSECTIONS</span>
-              <span data-lang-block="it">FASE 04 · PRODOTTO DI HADAMARD (\(\odot\)) &amp; INCROCI CIECHI</span>
+              <span data-lang-block="en">PHASE 04 · `np.multiply` (HADAMARD \(\odot\)) &amp; `argmax`</span>
+              <span data-lang-block="it">FASE 04 · `np.multiply` (HADAMARD \(\odot\)) &amp; `argmax`</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              To fuse motion prediction \(\overline{\operatorname{bel}}\) with camera votes \(L\), we simply multiply the two grids <strong>cell by cell</strong> (Hadamard product \(\overline{\operatorname{bel}}_{i,j} \odot L_{i,j}\)) and divide by the total sum, requiring <strong>zero matrix inversions</strong>! The brightest cell \((d^*, \varphi^*) = \arg\max\) drives the steering controller, while peak height \(\max(P) \lt 0.05\) warns the robot that lane lines vanished (blind intersection).
+              In <code>histogram_update</code>, fusing motion prior \(\overline{\operatorname{bel}}\) with camera likelihood \(L\) is literally <code>np.multiply(belief, likelihood)</code> (cell-by-cell Hadamard product \(\odot\)) divided by <code>np.sum(belief)</code>, requiring <strong>zero matrix inversions</strong>! The highest-weight bin \((d^*, \varphi^*) = \arg\max\) feeds the lane controller, while flat entropy warns of blind intersections.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Per fondere la predizione \(\overline{\operatorname{bel}}\) con i voti della camera \(L\), basta moltiplicare le due griglie <strong>cella per cella</strong> (prodotto di Hadamard \(\overline{\operatorname{bel}}_{i,j} \odot L_{i,j}\)) e dividere per la somma totale, con <strong>zero inversioni di matrici</strong>! La cella più luminosa \((d^*, \varphi^*) = \arg\max\) guida lo sterzo, mentre un picco troppo basso (\(\max(P) \lt 0.05\)) avvisa che le strisce sono sparite (incrocio cieco).
+              In <code>histogram_update</code>, fondere la predizione \(\overline{\operatorname{bel}}\) con i voti della camera \(L\) è letteralmente <code>np.multiply(belief, likelihood)</code> (prodotto di Hadamard \(\odot\) cella per cella) diviso <code>np.sum(belief)</code>, con <strong>zero inversioni di matrici</strong>! La cella col picco massimo \((d^*, \varphi^*) = \arg\max\) guida lo sterzo, mentre un picco piatto segnala un incrocio cieco.
             </p>
           </div>
         </div>

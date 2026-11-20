@@ -316,45 +316,45 @@
                 ? 'We place the Duckiebot onto the lane with zero prior knowledge: every cell in the \\(28\\times 28\\) grid holds equal probability \\(1/N^2\\).'
                 : 'Previous posterior becomes the new discrete prior \\(\\operatorname{bel}(d, \\varphi)\\) over lateral offset \\(d\\) and heading \\(\\varphi\\).';
             },
-            eq: '\\operatorname{bel}(d, \\varphi) \\in \\mathbb{R}^{N\\times N}, \\qquad \\sum_i \\sum_j p_{i,j} = 1',
+            eq: '\\operatorname{bel}(x_t) = \\sum_{i=1}^{N^2} w_t^i\\,\\delta(x_t - x^i), \\qquad \\sum_{i} w_t^i = 1',
             eqExplain: [
-              { sym: '\\operatorname{bel}(d, \\varphi)', label: '2D Histogram Grid', desc: 'Discrete \\(28\\times 28\\) matrix storing probability across every \\((d, \\varphi)\\) bin.' },
-              { sym: 'd', label: 'Lateral Offset', desc: 'Distance from the center of the right-hand lane (\\(+d\\) left, \\(-d\\) right).' },
+              { sym: '\\operatorname{bel}(x_t)', label: 'Dirac Histogram Grid', desc: 'Discrete \\(28\\times 28\\) matrix of cell centroids \\(x^i = (d^i, \\varphi^i)\\) weighted by \\(w_t^i\\).' },
+              { sym: '\\delta(x_t - x^i)', label: 'Dirac Delta Spike', desc: 'Concentrates each discrete bin weight \\(w_t^i\\) at cell centroid \\(x^i\\).' },
               { sym: '\\varphi', label: 'Lane Heading Error', desc: 'Angle of the Duckiebot relative to the lane direction.' },
-              { sym: '\\sum_{i,j} p_{i,j} = 1', label: 'Probability Conservation', desc: 'All cell weights always sum to 100%.' }
+              { sym: '\\sum_i w_t^i = 1', label: 'Probability Conservation', desc: 'All cell weights always sum to 100%.' }
             ]
           },
           {
-            title: 'Predict — Kinematic Shift + 2D Convolution Blur',
+            title: 'Predict — histogram_predict (Encoder Shift + cov_mask)',
             desc:
-              'Wheel odometry shifts probability mass via \\(\\Delta d \\approx v\\sin(\\varphi)\\Delta t\\) and \\(\\Delta\\varphi \\approx \\omega\\Delta t\\), then convolves with a Gaussian kernel that widens the peak.',
+              'Encoder ticks give forward arc \\(d_A\\) and turn \\(w\\). Every cell shifts via \\(d_t = d + d_A\\sin(\\hat{\\varphi})\\) and \\(\\varphi_t = \\varphi + w\\), then <code>gaussian_filter(..., cov_mask)</code> blurs uncertainty.',
             eq: function (u) {
               return (
-                '\\begin{aligned}d\' &= d + v\\sin(\\varphi)\\Delta t, \\quad \\varphi\' = \\varphi + (' +
+                '\\begin{aligned}d_t &= d + d_A\\sin(\\hat{\\varphi}), \\quad \\varphi_t = \\varphi + (' +
                 (u.dOmega >= 0 ? '+' : '') +
                 u.dOmega.toFixed(2) +
-                ')\\\\ \\overline{\\operatorname{bel}} &= \\operatorname{shift}(\\operatorname{bel}) * G_Q\\end{aligned}'
+                ')\\\\ \\overline{\\operatorname{bel}} &= \\operatorname{shift}(\\operatorname{bel}) * G_{\\text{cov\\_mask}}\\end{aligned}'
               );
             },
             eqExplain: [
-              { sym: 'd\'', label: 'Predicted Offset', desc: 'Driving forward at angle \\(\\varphi\\) shifts lateral position by \\(v\\sin(\\varphi)\\Delta t\\).' },
-              { sym: '\\varphi\'', label: 'Predicted Heading', desc: 'Steered angle shifted by angular command \\(\\omega\\Delta t\\).' },
-              { sym: '* G_Q', label: '2D Gaussian Blur', desc: '3×3 kernel convolution spreads probability into neighboring cells to model wheel slip.' }
+              { sym: 'd_A, w', label: 'Encoder Arc & Turn', desc: 'Forward arc \\((d_L+d_R)/2\\) and turn \\((d_R-d_L)/L\\) from wheel encoder ticks.' },
+              { sym: 'd_t, \\varphi_t', label: 'Shifted Cell Centroids', desc: 'Shifts lateral offset by \\(d_A\\sin(\\hat{\\varphi})\\) and rotates heading by \\(w\\).' },
+              { sym: '* G_{\\text{cov\\_mask}}', label: 'gaussian_filter Blur', desc: '2D convolution with <code>cov_mask</code> spreads probability into neighbor bins for wheel slip.' }
             ]
           },
           {
-            title: 'Observe — Pinhole Camera Segments & Intersecting Votes',
+            title: 'Observe — generate_vote (t̂, n̂, arcsin & linewidth)',
             desc:
-              'Each extracted yellow dash (\\(+w/2\\)) and white border segment (\\(-w/2\\)) casts discrete votes onto \\((d, \\varphi)\\). Intersecting both clues suppresses glare outliers and isolates \\(L(d, \\varphi)\\).',
+              'Each projected segment \\(p_1 \\to p_2\\) yields tangent \\(\\hat{t}\\), normal \\(\\hat{n}\\), angle \\(\\varphi_i = \\arcsin(t_y)\\), and distance shifted by tape width \\(w_{\\text{paint}}\\) and \\(\\pm w_{\\text{lane}}/2\\).',
             eq: function (u) {
               return u.blindMode
                 ? 'L(d, \\varphi) = \\mathcal{U}\\quad (\\text{No lane markings visible})'
-                : '\\begin{aligned}L_{\\text{lane}} &= V_{\\text{yellow}}(+w/2) \\cap V_{\\text{white}}(-w/2)\\\\ \\varphi_i &= \\frac{\\pi}{2} - \\operatorname{atan2}(|\\Delta x|, \\Delta y)\\end{aligned}';
+                : '\\begin{aligned}\\hat{t} &= \\frac{p_2 - p_1}{\\|p_2 - p_1\\|}, \\quad \\varphi_i = \\arcsin(t_y)\\\\ d_i &= \\pm d_{\\text{seg}} - w_{\\text{paint}} \\mp \\frac{w_{\\text{lane}}}{2}\\end{aligned}';
             },
             eqExplain: [
-              { sym: 'V_{\\text{yellow}}(+w/2)', label: 'Yellow Divider Votes', desc: 'Yellow center dashes project to ground and shift by \\(+w/2\\) toward lane center.' },
-              { sym: 'V_{\\text{white}}(-w/2)', label: 'White Border Votes', desc: 'White outer edge segments project and shift by \\(-w/2\\); intersecting both removes glare.' },
-              { sym: '\\varphi_i', label: 'Segment Orientation', desc: 'Heading angle inferred from each ground-projected segment vector \\((\\Delta x, \\Delta y)\\).' }
+              { sym: '\\hat{t}, \\hat{n}', label: 'Unit Tangent & Normal', desc: 'Segment direction \\(\\hat{t}\\) and normal \\(\\hat{n} = [-t_y, t_x]^\\top\\) computing \\(d_{\\text{seg}} = \\hat{n}\\cdot p\\).' },
+              { sym: '\\arcsin(t_y)', label: 'Segment Orientation', desc: 'Heading extracted directly from the \\(y\\)-component of unit tangent \\(\\hat{t}\\).' },
+              { sym: 'w_{\\text{paint}}, \\frac{w_{\\text{lane}}}{2}', label: 'Tape Width & Lane Shift', desc: 'Corrects for line thickness (<code>linewidth</code>) before shifting to lane center.' }
             ]
           },
           {
@@ -390,45 +390,45 @@
                 ? 'Appoggiamo il Duckiebot sulla corsia senza sapere dove sia: tutte le celle della griglia \\(28\\times 28\\) partono con probabilità uniforme \\(1/N^2\\).'
                 : 'Il posteriore precedente diventa il nuovo prior discreto \\(\\operatorname{bel}(d, \\varphi)\\) su scostamento laterale \\(d\\) e angolo \\(\\varphi\\).';
             },
-            eq: '\\operatorname{bel}(d, \\varphi) \\in \\mathbb{R}^{N\\times N}, \\qquad \\sum_i \\sum_j p_{i,j} = 1',
+            eq: '\\operatorname{bel}(x_t) = \\sum_{i=1}^{N^2} w_t^i\\,\\delta(x_t - x^i), \\qquad \\sum_{i} w_t^i = 1',
             eqExplain: [
-              { sym: '\\operatorname{bel}(d, \\varphi)', label: 'Griglia Istogramma 2D', desc: 'Matrice discreta \\(28\\times 28\\) che assegna una probabilità a ogni cella \\((d, \\varphi)\\).' },
-              { sym: 'd', label: 'Scostamento Laterale', desc: 'Distanza dal centro della corsia destra (\\(+d\\) a sinistra, \\(-d\\) a destra).' },
+              { sym: '\\operatorname{bel}(x_t)', label: 'Griglia a Delta di Dirac', desc: 'Matrice \\(28\\times 28\\) di centroidi \\(x^i = (d^i, \\varphi^i)\\) pesati da \\(w_t^i\\).' },
+              { sym: '\\delta(x_t - x^i)', label: 'Delta di Dirac', desc: 'Concentra il peso discreto \\(w_t^i\\) sul centroide della cella \\(x^i\\).' },
               { sym: '\\varphi', label: 'Angolo in Corsia', desc: 'Inclinazione del Duckiebot rispetto alla direzione della corsia.' },
-              { sym: '\\sum_{i,j} p_{i,j} = 1', label: 'Conservazione Massa', desc: 'La somma di tutte le celle della griglia vale sempre 100%.' }
+              { sym: '\\sum_i w_t^i = 1', label: 'Conservazione Massa', desc: 'La somma di tutti i pesi vale sempre 100%.' }
             ]
           },
           {
-            title: 'Predizione — Shift Cinematico + Sfocatura 2D',
+            title: 'Predizione — histogram_predict (Shift d_A, w + cov_mask)',
             desc:
-              'L’odometria trasla la massa con \\(\\Delta d \\approx v\\sin(\\varphi)\\Delta t\\) e \\(\\Delta\\varphi \\approx \\omega\\Delta t\\), poi una convoluzione gaussiana diffonde e allarga la distribuzione.',
+              'I tick encoder danno avanzamento \\(d_A\\) e rotazione \\(w\\). Ogni cella trasla con \\(d_t = d + d_A\\sin(\\hat{\\varphi})\\) e \\(\\varphi_t = \\varphi + w\\), poi <code>gaussian_filter(..., cov_mask)</code> sfoca la griglia.',
             eq: function (u) {
               return (
-                '\\begin{aligned}d\' &= d + v\\sin(\\varphi)\\Delta t, \\quad \\varphi\' = \\varphi + (' +
+                '\\begin{aligned}d_t &= d + d_A\\sin(\\hat{\\varphi}), \\quad \\varphi_t = \\varphi + (' +
                 (u.dOmega >= 0 ? '+' : '') +
                 u.dOmega.toFixed(2) +
-                ')\\\\ \\overline{\\operatorname{bel}} &= \\operatorname{shift}(\\operatorname{bel}) * G_Q\\end{aligned}'
+                ')\\\\ \\overline{\\operatorname{bel}} &= \\operatorname{shift}(\\operatorname{bel}) * G_{\\text{cov\\_mask}}\\end{aligned}'
               );
             },
             eqExplain: [
-              { sym: 'd\'', label: 'Offset Predetto', desc: 'Avanzando con angolo \\(\\varphi\\), lo scostamento laterale cambia di \\(v\\sin(\\varphi)\\Delta t\\).' },
-              { sym: '\\varphi\'', label: 'Angolo Predetto', desc: 'Orientamento aggiornato dal comando di sterzata \\(\\omega\\Delta t\\).' },
-              { sym: '* G_Q', label: 'Sfocatura Gaussiana 2D', desc: 'Convoluzione 3×3 che sparge la probabilità nelle celle vicine simulando lo slittamento.' }
+              { sym: 'd_A, w', label: 'Arco & Rotazione Encoder', desc: 'Spostamento medio \\((d_L+d_R)/2\\) e sterzata \\((d_R-d_L)/L\\) dagli encoder.' },
+              { sym: 'd_t, \\varphi_t', label: 'Nuovi Centroidi Celle', desc: 'Trasla \\(d\\) di \\(d_A\\sin(\\hat{\\varphi})\\) e ruota l’angolo di \\(w\\).' },
+              { sym: '* G_{\\text{cov\\_mask}}', label: 'Sfocatura gaussian_filter', desc: 'Convoluzione 2D con <code>cov_mask</code> per modellare lo slittamento delle ruote.' }
             ]
           },
           {
-            title: 'Osservazione — Segmenti Camera & Incrocio Indizi',
+            title: 'Osservazione — generate_vote (t̂, n̂, arcsin & linewidth)',
             desc:
-              'Ogni segmento giallo (\\(+w/2\\)) e bianco (\\(-w/2\\)) estratto dalla camera vota nella griglia: incrociare i due indizi elimina i riflessi spuri e concentra \\(L(d, \\varphi)\\).',
+              'Ogni segmento proiettato \\(p_1 \\to p_2\\) dà tangente \\(\\hat{t}\\), normale \\(\\hat{n}\\), angolo \\(\\varphi_i = \\arcsin(t_y)\\), e distanza corretta per spessore striscia \\(w_{\\text{paint}}\\) e \\(\\pm w_{\\text{lane}}/2\\).',
             eq: function (u) {
               return u.blindMode
                 ? 'L(d, \\varphi) = \\mathcal{U}\\quad (\\text{Nessuna corsia visibile})'
-                : '\\begin{aligned}L_{\\text{corsia}} &= V_{\\text{giallo}}(+w/2) \\cap V_{\\text{bianco}}(-w/2)\\\\ \\varphi_i &= \\frac{\\pi}{2} - \\operatorname{atan2}(|\\Delta x|, \\Delta y)\\end{aligned}';
+                : '\\begin{aligned}\\hat{t} &= \\frac{p_2 - p_1}{\\|p_2 - p_1\\|}, \\quad \\varphi_i = \\arcsin(t_y)\\\\ d_i &= \\pm d_{\\text{seg}} - w_{\\text{paint}} \\mp \\frac{w_{\\text{lane}}}{2}\\end{aligned}';
             },
             eqExplain: [
-              { sym: 'V_{\\text{giallo}}(+w/2)', label: 'Voti Linea Gialla', desc: 'I tratteggi gialli centrali proiettati a terra votano spostando la stima di \\(+w/2\\).' },
-              { sym: 'V_{\\text{bianco}}(-w/2)', label: 'Voti Bordo Bianco', desc: 'Il bordo bianco destro vota spostando di \\(-w/2\\); l’incrocio elimina i riflessi spuri.' },
-              { sym: '\\varphi_i', label: 'Orientamento Segmento', desc: 'Angolo stimato da ogni segmento proiettato sul pavimento tramite \\(\\operatorname{atan2}\\).' }
+              { sym: '\\hat{t}, \\hat{n}', label: 'Versori Tangente & Normale', desc: 'Direzione \\(\\hat{t}\\) e normale \\(\\hat{n} = [-t_y, t_x]^\\top\\) per calcolare \\(d_{\\text{seg}} = \\hat{n}\\cdot p\\).' },
+              { sym: '\\arcsin(t_y)', label: 'Orientamento Segmento', desc: 'Angolo estratto direttamente dalla componente \\(y\\) del versore tangente \\(\\hat{t}\\).' },
+              { sym: 'w_{\\text{paint}}, \\frac{w_{\\text{lane}}}{2}', label: 'Spessore Vernice & Mezza Corsia', desc: 'Sottrae lo spessore reale (<code>linewidth</code>) prima di spostarsi al centro corsia.' }
             ]
           },
           {

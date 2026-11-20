@@ -369,62 +369,82 @@
         ]
       }
     },
-    'hf-predict': {
-      kicker: 'HISTOGRAM FILTER · GRID PREDICT',
-      tex: 'd\' = d + v\\sin(\\varphi)\\Delta t, \\quad \\varphi\' = \\varphi + \\omega\\Delta t, \\qquad \\overline{\\operatorname{bel}} = \\operatorname{shift}(\\operatorname{bel}) * G_Q',
+    'hf-dirac': {
+      kicker: 'HISTOGRAM FILTER · DIRAC BELIEF',
+      tex: '\\operatorname{bel}(x_t) = \\sum_{i=1}^N w_t^i\\,\\delta(x_t - x^i), \\qquad \\delta(x) = \\begin{cases} +\\infty & x = 0 \\\\ 0 & x \\neq 0 \\end{cases}, \\quad \\int_{-\\infty}^{+\\infty} \\delta(x)\\,dx = 1',
       en: {
-        title: 'Kinematic Grid Shift & Gaussian Blur',
+        title: 'Dirac Delta Histogram Representation',
         terms: [
-          { sym: 'd\'', label: 'Shifted Lateral Offset', desc: 'Moving forward at lane angle \\(\\varphi\\) changes lateral distance \\(d\\) by \\(v\\sin(\\varphi)\\Delta t\\).' },
-          { sym: '\\varphi\'', label: 'Shifted Heading', desc: 'Angular rate \\(\\omega\\) rotates the Duckiebot orientation inside the lane.' },
-          { sym: '* G_Q', label: '2D Convolution Blur', desc: 'Spreads probability into neighboring grid cells to account for odometry noise.' }
+          { sym: 'w_t^i', label: 'Cell Weight', desc: 'Probability mass stored in grid cell \\(i\\) at time \\(t\\), initialized by <code>histogram_prior</code> (\\(\\sum w_t^i = 1\\)).' },
+          { sym: '\\delta(x_t - x^i)', label: 'Dirac Delta Definition', desc: 'Equals \\(+\\infty\\) at \\(x_t = x^i\\) and \\(0\\) elsewhere, with \\(\\int \\delta(x)\\,dx = 1\\): turns discrete weights into a continuous PDF.' },
+          { sym: 'x^i = (d^i, \\varphi^i)', label: 'Cell Centroid', desc: 'Center coordinates (lateral offset \\(d^i\\) and lane heading \\(\\varphi^i\\)) of bin \\(i\\).' }
         ]
       },
       it: {
-        title: 'Traslazione Cinematica & Sfocatura Griglia',
+        title: 'Rappresentazione a Delta di Dirac',
         terms: [
-          { sym: 'd\'', label: 'Nuovo Offset Laterale', desc: 'Avanzando con angolo \\(\\varphi\\), lo scostamento cambia di \\(v\\sin(\\varphi)\\Delta t\\).' },
-          { sym: '\\varphi\'', label: 'Nuovo Angolo', desc: 'La velocità angolare \\(\\omega\\) ruota la direzione rispetto alla corsia.' },
-          { sym: '* G_Q', label: 'Convoluzione Gaussiana 2D', desc: 'Diffonde la probabilità sulle celle adiacenti per modellare il rumore di moto.' }
+          { sym: 'w_t^i', label: 'Peso della Cella', desc: 'Massa di probabilità nella cella \\(i\\) al tempo \\(t\\), inizializzata con <code>histogram_prior</code> (\\(\\sum w_t^i = 1\\)).' },
+          { sym: '\\delta(x_t - x^i)', label: 'Definizione Delta di Dirac', desc: 'Vale \\(+\\infty\\) in \\(x_t = x^i\\) e \\(0\\) altrove, con \\(\\int \\delta(x)\\,dx = 1\\): trasforma pesi discreti in una densità continua.' },
+          { sym: 'x^i = (d^i, \\varphi^i)', label: 'Centroide della Cella', desc: 'Coordinate centrali (scostamento \\(d^i\\) e angolo \\(\\varphi^i\\)) del bin \\(i\\).' }
+        ]
+      }
+    },
+    'hf-predict': {
+      kicker: 'HISTOGRAM FILTER · histogram_predict',
+      tex: 'd_A = \\frac{d_L + d_R}{2},\\; w = \\frac{d_R - d_L}{L}, \\qquad d_t = d + d_A\\sin(\\hat{\\varphi}),\\; \\varphi_t = \\varphi + w, \\qquad \\overline{\\operatorname{bel}} = \\operatorname{shift}(\\operatorname{bel}) * G_{\\text{cov\\_mask}}',
+      en: {
+        title: 'Encoder Kinematic Shift & Gaussian Filter',
+        terms: [
+          { sym: 'd_A, w', label: 'Encoder Arc & Rotation', desc: 'Average wheel displacement \\((d_L+d_R)/2\\) and differential turn \\((d_R-d_L)/L\\).' },
+          { sym: 'd_t, \\varphi_t', label: 'Shifted Cell Coordinates', desc: 'Each grid centroid moves laterally by \\(d_A\\sin(\\hat{\\varphi})\\) and rotates by \\(w\\).' },
+          { sym: '* G_{\\text{cov\\_mask}}', label: '2D Gaussian Filter Blur', desc: 'Calls <code>gaussian_filter(p_belief, cov_mask)</code> to model wheel slip uncertainty.' }
+        ]
+      },
+      it: {
+        title: 'Traslazione da Encoder & Gaussian Filter',
+        terms: [
+          { sym: 'd_A, w', label: 'Avanzamento & Rotazione', desc: 'Media degli encoder \\((d_L+d_R)/2\\) e sterzata differenziale \\((d_R-d_L)/L\\).' },
+          { sym: 'd_t, \\varphi_t', label: 'Nuove Coordinate Celle', desc: 'Ogni centroide trasla lateralmente di \\(d_A\\sin(\\hat{\\varphi})\\) e ruota di \\(w\\).' },
+          { sym: '* G_{\\text{cov\\_mask}}', label: 'Sfocatura Gaussian Filter', desc: 'Esegue <code>gaussian_filter(p_belief, cov_mask)</code> per modellare lo slittamento.' }
         ]
       }
     },
     'hf-vote': {
-      kicker: 'HISTOGRAM FILTER · INVERSE SENSOR VOTE',
-      tex: '\\varphi_i = \\frac{\\pi}{2} - \\operatorname{atan2}(|\\Delta x|, \\Delta y), \\qquad d_i = d_{\\text{seg}} \\pm \\frac{w_{\\text{lane}}}{2}',
+      kicker: 'HISTOGRAM FILTER · generate_vote',
+      tex: '\\hat{t} = \\frac{p_2 - p_1}{\\|p_2 - p_1\\|},\\; \\hat{n} = \\begin{bmatrix} -t_y \\\\ t_x \\end{bmatrix}, \\quad \\varphi_i = \\arcsin(t_y), \\qquad d_i^{\\text{white/yellow}} = \\pm d_{\\text{seg}} - w_{\\text{paint}} \\mp \\frac{w_{\\text{lane}}}{2}',
       en: {
-        title: 'Ground-Projected Segment Voting',
+        title: 'Tangent/Normal Segment Voting (generate_vote)',
         terms: [
-          { sym: '\\varphi_i', label: 'Segment Orientation', desc: 'Heading inferred from ground-projected segment vector \\((\\Delta x, \\Delta y)\\).' },
-          { sym: 'd_{\\text{seg}}', label: 'Segment Lateral Distance', desc: 'Measured lateral distance from robot to the projected yellow or white line.' },
-          { sym: '\\pm w_{\\text{lane}}/2', label: 'Half-Lane Shift', desc: 'Yellow divider shifts estimate by \\(+w/2\\); white outer border shifts by \\(-w/2\\).' }
+          { sym: '\\hat{t}, \\hat{n}', label: 'Unit Tangent & Normal', desc: 'Direction along ground segment \\(p_1 \\to p_2\\) and orthogonal normal vector \\([-t_y, t_x]^\\top\\).' },
+          { sym: '\\varphi_i = \\arcsin(t_y)', label: 'Segment Heading', desc: 'Lane angle extracted directly from the \\(y\\)-component of unit tangent \\(\\hat{t}\\).' },
+          { sym: 'w_{\\text{paint}}, \\frac{w_{\\text{lane}}}{2}', label: 'Tape Width & Half-Lane', desc: 'Subtracts real line thickness (<code>linewidth_white/yellow</code>) before shifting to lane center.' }
         ]
       },
       it: {
-        title: 'Voto dei Segmenti Proiettati al Suolo',
+        title: 'Voto con Versori Tangente/Normale (generate_vote)',
         terms: [
-          { sym: '\\varphi_i', label: 'Orientamento Segmento', desc: 'Angolo stimato dal vettore \\((\\Delta x, \\Delta y)\\) del segmento proiettato a terra.' },
-          { sym: 'd_{\\text{seg}}', label: 'Distanza dal Segmento', desc: 'Distanza laterale tra il robot e la striscia gialla o bianca rilevata.' },
-          { sym: '\\pm w_{\\text{lane}}/2', label: 'Spostamento Mezza Corsia', desc: 'Il centro giallo somma \\(+w/2\\), mentre il bordo bianco sottrae \\(-w/2\\).' }
+          { sym: '\\hat{t}, \\hat{n}', label: 'Versori Tangente & Normale', desc: 'Direzione unitaria del segmento \\(p_1 \\to p_2\\) e normale ortogonale \\([-t_y, t_x]^\\top\\).' },
+          { sym: '\\varphi_i = \\arcsin(t_y)', label: 'Angolo Segmento', desc: 'Inclinazione in corsia estratta dalla componente \\(y\\) del versore tangente \\(\\hat{t}\\).' },
+          { sym: 'w_{\\text{paint}}, \\frac{w_{\\text{lane}}}{2}', label: 'Spessore Vernice & Mezza Corsia', desc: 'Sottrae lo spessore reale della striscia (<code>linewidth</code>) prima di spostarsi al centro corsia.' }
         ]
       }
     },
     'hf-update': {
-      kicker: 'HISTOGRAM FILTER · HADAMARD UPDATE',
+      kicker: 'HISTOGRAM FILTER · histogram_update',
       tex: '\\operatorname{bel}_{i,j} = \\frac{\\overline{\\operatorname{bel}}_{i,j} \\odot L_{i,j}}{\\sum_{u,v} \\overline{\\operatorname{bel}}_{u,v} \\odot L_{u,v}}, \\qquad (d^*, \\varphi^*) = \\arg\\max_{i,j} \\operatorname{bel}_{i,j}',
       en: {
-        title: 'Element-Wise Hadamard Fusion & Argmax',
+        title: 'np.multiply (Hadamard Fusion) & Argmax',
         terms: [
-          { sym: '\\odot', label: 'Hadamard Product', desc: 'Multiplies each grid cell \\((i,j)\\) by its camera likelihood \\(L_{i,j}\\) without matrix inversions.' },
-          { sym: '\\sum_{u,v} (\\cdot)', label: 'Grid Sum Normalizer', desc: 'Ensures total probability across all \\(N \\times N\\) bins remains \\(1\\).' },
+          { sym: '\\odot', label: 'Hadamard (np.multiply)', desc: 'Multiplies each cell \\((i,j)\\) by its camera likelihood \\(L_{i,j}\\) without matrix inversions.' },
+          { sym: '\\sum_{u,v} (\\cdot)', label: 'np.sum Normalizer', desc: 'Ensures total probability across all \\(N \\times N\\) bins remains \\(1\\).' },
           { sym: '\\arg\\max_{i,j}', label: 'Best Hypothesis Extraction', desc: 'Selects the single cell \\((d^*, \\varphi^*)\\) with highest posterior probability.' }
         ]
       },
       it: {
-        title: 'Prodotto di Hadamard & Estrazione Argmax',
+        title: 'np.multiply (Prodotto Hadamard) & Argmax',
         terms: [
-          { sym: '\\odot', label: 'Prodotto di Hadamard', desc: 'Moltiplica cella per cella predizione e verosimiglianza \\(L_{i,j}\\) senza invertire matrici.' },
-          { sym: '\\sum_{u,v} (\\cdot)', label: 'Normalizzatore Griglia', desc: 'Riporta a \\(1\\) la somma di tutte le \\(N \\times N\\) celle.' },
+          { sym: '\\odot', label: 'Hadamard (np.multiply)', desc: 'Moltiplica cella per cella predizione e verosimiglianza \\(L_{i,j}\\) senza invertire matrici.' },
+          { sym: '\\sum_{u,v} (\\cdot)', label: 'Normalizzatore (np.sum)', desc: 'Riporta a \\(1\\) la somma di tutte le \\(N \\times N\\) celle.' },
           { sym: '\\arg\\max_{i,j}', label: 'Estrazione Posa Ottima', desc: 'Restituisce le coordinate \\((d^*, \\varphi^*)\\) della cella con picco massimo.' }
         ]
       }
