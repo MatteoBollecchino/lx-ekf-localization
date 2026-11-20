@@ -1,750 +1,391 @@
+/* LAB 02: Particle Filter (MCL) — 6-Scene 12-Particle Bimodal, Roulette & Kidnapping Walkthrough */
 (function () {
   'use strict';
 
-  var LS = window.LocSims;
-  if (!LS) return;
-  var M = LS.math;
-  var D = LS.draw;
+  function init() {
+    var C = window.CinemaLabs;
+    if (!C) return;
 
-  function initPF() {
-    var root = document.getElementById('lab-pf');
-    if (!root) return;
+    var M = 12;
+    var X0 = [0.40, 1.20, 2.00, 2.80, 3.60, 4.40, 5.20, 6.00, 6.80, 7.60, 8.40, 9.20];
+    var EPS = [-0.14, 0.18, -0.06, 0.11, -0.19, 0.08, -0.12, 0.16, -0.08, 0.15, -0.11, 0.05];
+    var X1 = X0.map(function (x, i) { return C.clamp(x + 0.60 + EPS[i], 0.2, 9.8); });
+    var X2 = X1.map(function (x, i) { return C.clamp(x + 0.40 + EPS[(i + 3) % M] * 0.5, 0.2, 9.8); });
 
-    var btnKidnap = root.querySelector('[data-sim-pf-kidnap]');
-    var btnAlpha = root.querySelector('[data-sim-pf-alpha]');
-
-    var NUM_P = 80;
-    var WORLD_W = 10.0;
-    var WORLD_H = 6.0;
-    var SENS_SIG = 0.65;
-
-    function poseAt(s) {
-      var cx = 5.0;
-      var cy = 3.0;
-      var rx = 3.1;
-      var ry = 1.65;
-      var x = cx + rx * Math.cos(s);
-      var y = cy + ry * Math.sin(s);
-      var dx = -rx * Math.sin(s);
-      var dy = ry * Math.cos(s);
-      var th = Math.atan2(dy, dx);
-      return { x: x, y: y, th: th };
+    function gaussUnnorm(x, mu, sig) {
+      var z = (x - mu) / sig;
+      return Math.exp(-0.5 * z * z);
+    }
+    function normalize(arr) {
+      var s = 0;
+      for (var i = 0; i < arr.length; i++) s += arr[i];
+      return arr.map(function (v) { return s > 0 ? v / s : 1 / arr.length; });
+    }
+    function calcNeff(w) {
+      var sq = 0;
+      for (var i = 0; i < w.length; i++) sq += w[i] * w[i];
+      return sq > 0 ? 1 / sq : 0;
     }
 
-    function createUniformParticles() {
-      var arr = [];
-      for (var i = 0; i < NUM_P; i++) {
-        arr.push({
-          x: 0.6 + Math.random() * (WORLD_W - 1.2),
-          y: 0.6 + Math.random() * (WORLD_H - 1.2),
-          prevX: 0,
-          prevY: 0,
-          targetX: 0,
-          targetY: 0,
-          w: 1 / NUM_P,
-          prevW: 1 / NUM_P,
-          targetW: 1 / NUM_P,
-          bornAlpha: false,
-          dying: false,
-          parentX: 0,
-          parentY: 0
-        });
-        arr[i].prevX = arr[i].x;
-        arr[i].prevY = arr[i].y;
-        arr[i].targetX = arr[i].x;
-        arr[i].targetY = arr[i].y;
+    var W_UNIF = X0.map(function () { return 1 / M; });
+    var W_BIMODAL = normalize(X1.map(function (x) {
+      return gaussUnnorm(x, 2.0, 0.52) + gaussUnnorm(x, 8.0, 0.52) + 0.015;
+    }));
+    var W_UNIMODAL = normalize(X2.map(function (x, i) {
+      return W_BIMODAL[i] * (gaussUnnorm(x, 8.6, 0.45) + 0.004);
+    }));
+
+    // Low-variance deterministic resampling from W_UNIMODAL with r = 0.03
+    var R_OFFSET = 0.03;
+    var RESAMPLED_SRC = [];
+    var cum = 0, ptr = 0;
+    for (var sIdx = 0; sIdx < M; sIdx++) {
+      var u = R_OFFSET + sIdx / M;
+      while (ptr < M - 1 && cum + W_UNIMODAL[ptr] < u) {
+        cum += W_UNIMODAL[ptr];
+        ptr++;
       }
-      return arr;
+      RESAMPLED_SRC.push(ptr);
     }
-
-    function weightedMean(particles) {
-      var sx = 0;
-      var sy = 0;
-      var sw = 0;
-      for (var i = 0; i < particles.length; i++) {
-        sx += particles[i].x * particles[i].w;
-        sy += particles[i].y * particles[i].w;
-        sw += particles[i].w;
-      }
-      if (sw < 1e-8) return { x: WORLD_W / 2, y: WORLD_H / 2 };
-      return { x: sx / sw, y: sy / sw };
-    }
-
-    function resetUser(u) {
-      if (u.alphaOn === undefined) u.alphaOn = true;
-      u.s = -Math.PI * 0.75;
-      u.prevS = u.s;
-      var p0 = poseAt(u.s);
-      u.trueX = p0.x;
-      u.trueY = p0.y;
-      u.trueTh = p0.th;
-      u.zX = p0.x;
-      u.zY = p0.y;
-      u.particles = createUniformParticles();
-      u.nextParticles = null;
-      u.maxW = 1 / NUM_P;
-      u.nEff = NUM_P;
-      u.mean = weightedMean(u.particles);
-      u.kidnapFlash = 0;
-      u.landmarks = [
-        { x: 1.1, y: 1.0 },
-        { x: 8.9, y: 1.0 },
-        { x: 1.1, y: 5.0 },
-        { x: 8.9, y: 5.0 }
-      ];
-    }
-
-    function syncExtraBtns(lang, u) {
-      if (btnKidnap) {
-        btnKidnap.textContent = lang === 'it' ? 'Kidnap Robot' : 'Kidnap Robot';
-      }
-      if (btnAlpha) {
-        btnAlpha.textContent =
-          lang === 'it'
-            ? u.alphaOn
-              ? 'α-Trick (5%): ON'
-              : 'α-Trick (5%): OFF'
-            : u.alphaOn
-              ? 'α-Trick (5%): ON'
-              : 'α-Trick (5%): OFF';
-        btnAlpha.classList.toggle('active-toggle', !!u.alphaOn);
-      }
-    }
-
-    var lab = LS.createLab('lab-pf', {
-      phaseDurations: [1.5, 2.6, 2.7, 3.0],
-      phaseLabels: {
-        en: ['01 Init/Cloud', '02 Predict', '03 Weight', '04 Resample'],
-        it: ['01 Nube', '02 Predizione', '03 Pesi', '04 Resample']
-      },
-      phases: {
-        en: [
-          {
-            title: function (u, st) {
-              return st.cycle === 1
-                ? 'Cycle 1 — Uniform Monte Carlo Cloud'
-                : 'Cycle ' + st.cycle + ' — Clustered Hypothesis Cloud';
-            },
-            desc:
-              '\\(M=80\\) random samples cover possible poses with uniform weights \\(1/M\\). Non-Gaussian, skewed, or multi-modal distributions require zero closed-form equations.',
-            eq: '\\operatorname{bel}(x_0) \\approx \\left\\{\\, x^{[i]} \\sim \\mathcal{U}(\\text{arena}),\\; w^{[i]} = \\tfrac{1}{M} \\,\\right\\}',
-            eqExplain: [
-              { sym: 'x^{[i]}', label: 'Particle Hypothesis', desc: 'A single candidate pose \\((x, y)\\) inside the arena.' },
-              { sym: 'w^{[i]}', label: 'Importance Weight', desc: 'How plausible particle \\(i\\) is; initially every particle starts equal at \\(1/M\\).' },
-              { sym: 'M', label: 'Particle Count', desc: 'Total number of discrete samples (here \\(M=80\\)).' }
-            ]
-          },
-          {
-            title: 'Predict — Independent Noisy Motion',
-            desc:
-              'Each particle independently draws noisy odometry (\\(u_t + \\varepsilon_i\\)). Because noise isn’t averaged into a matrix, the swarm bends along curved trajectories.',
-            eq: 'x_t^{[i]} \\sim p\\!\\left(x_t \\mid u_t,\\, x_{t-1}^{[i]}\\right) \\quad [+\\,Q\\text{ sample noise}]',
-            eqExplain: [
-              { sym: 'x_t^{[i]}', label: 'Propagated Particle', desc: 'New candidate pose obtained by moving \\(x_{t-1}^{[i]}\\) forward.' },
-              { sym: 'u_t', label: 'Motion Command', desc: 'Wheel odometry displacement applied to every particle.' },
-              { sym: 'Q', label: 'Stochastic Spread', desc: 'Independent random jitter sampled per particle so the cloud naturally fans out.' }
-            ]
-          },
-          {
-            title: 'Weight — Observation Likelihood Spotlight',
-            desc:
-              'Landmarks yield noisy sensor estimate \\(z_t\\). Each particle’s weight scales by Gaussian likelihood \\(\\mathcal{N}(z_t; x^{[i]}, R)\\) and normalizes (\\(\\sum w = 1\\)).',
-            eq: function (u) {
-              return (
-                '\\begin{aligned}w^{[i]} &\\propto \\exp\\!\\left(-\\frac{\\|z_t - x^{[i]}\\|^2}{2\\sigma^2}\\right)\\\\ N_{\\text{eff}} &= \\frac{1}{\\sum (w^{[i]})^2} = ' +
-                u.nEff.toFixed(1) +
-                ' / ' +
-                NUM_P +
-                '\\end{aligned}'
-              );
-            },
-            eqExplain: [
-              { sym: 'w^{[i]}', label: 'Likelihood Score', desc: 'Grows exponentially when particle \\(x^{[i]}\\) is close to sensor reading \\(z_t\\).' },
-              { sym: '\\sigma^2', label: 'Sensor Tolerance', desc: 'Sensor variance controlling how tightly particles are penalized with distance.' },
-              { sym: 'N_{\\text{eff}}', label: 'Effective Sample Size', desc: 'Measures how many particles still carry meaningful weight (triggers resampling when low).' }
-            ]
-          },
-          {
-            title: 'Resample — Low-Variance Roulette + \\(\\alpha\\)-Trick',
-            desc:
-              'Equidistant comb pointers sweep the cumulative weight tape \\([0,1]\\) in \\(\\mathcal{O}(M)\\) time: winners divide (mitosis), losers vanish, and \\(\\alpha=5\\%\\) sparks enable Kidnapped recovery.',
-            eq: function (u) {
-              return (
-                '\\begin{aligned}U_i &= r + \\frac{i - 1}{M}, \\quad r \\sim \\mathcal{U}\\!\\left(0,\\tfrac{1}{M}\\right)\\\\ \\alpha_{\\text{rand}} &= ' +
-                (u.alphaOn ? '0.05\\;(\\text{4 fresh sparks})' : '0.00\\;(\\text{disabled})') +
-                '\\end{aligned}'
-              );
-            },
-            eqExplain: [
-              { sym: 'U_i', label: 'Comb Pointer', desc: 'Equally spaced spokes around the roulette wheel that clone wide gold slices.' },
-              { sym: 'r', label: 'Single Random Start', desc: 'One random offset in \\([0, 1/M)\\) keeps sampling variance ultra-low in \\(\\mathcal{O}(M)\\).' },
-              { sym: '\\alpha_{\\text{rand}}', label: 'Kidnapped Recovery', desc: 'Fraction of fresh random particles injected so the filter can recover if the robot is moved.' }
-            ]
-          }
-        ],
-        it: [
-          {
-            title: function (u, st) {
-              return st.cycle === 1
-                ? 'Ciclo 1 — Nube Monte Carlo Uniforme'
-                : 'Ciclo ' + st.cycle + ' — Nube di Ipotesi Convergente';
-            },
-            desc:
-              '\\(M=80\\) campioni casuali coprono le pose possibili con peso uniforme \\(1/M\\). Distribuzioni asimmetriche o multimodali senza assunzioni gaussiane.',
-            eq: '\\operatorname{bel}(x_0) \\approx \\left\\{\\, x^{[i]} \\sim \\mathcal{U}(\\text{mappa}),\\; w^{[i]} = \\tfrac{1}{M} \\,\\right\\}',
-            eqExplain: [
-              { sym: 'x^{[i]}', label: 'Particella (Ipotesi)', desc: 'Una singola posa candidata \\((x, y)\\) sparsa nell’arena.' },
-              { sym: 'w^{[i]}', label: 'Peso di Importanza', desc: 'Quanto è credibile la particella \\(i\\); all’inizio tutte valgono \\(1/M\\).' },
-              { sym: 'M', label: 'Numero Particelle', desc: 'Totale dei campioni discreti simulati (qui \\(M=80\\)).' }
-            ]
-          },
-          {
-            title: 'Predizione — Moto Stocastico Indipendente',
-            desc:
-              'Ogni particella applica il comando \\(u_t\\) aggiungendo rumore indipendente \\(\\varepsilon_i\\). Campionando direttamente, la nube segue curve non lineari.',
-            eq: 'x_t^{[i]} \\sim p\\!\\left(x_t \\mid u_t,\\, x_{t-1}^{[i]}\\right) \\quad [+\\,\\text{rumore } Q]',
-            eqExplain: [
-              { sym: 'x_t^{[i]}', label: 'Particella Propagata', desc: 'Nuova posizione ottenuta spostando \\(x_{t-1}^{[i]}\\) con il moto.' },
-              { sym: 'u_t', label: 'Comando Odometrico', desc: 'Spostamento applicato in modo indipendente a ogni particella.' },
-              { sym: 'Q', label: 'Dispersione Stocastica', desc: 'Rumore casuale diverso per ogni particella che apre la nuvola lungo la curva.' }
-            ]
-          },
-          {
-            title: 'Pesi — Verosimiglianza con i Landmark',
-            desc:
-              'I landmark producono la misura \\(z_t\\). Il peso di ogni particella cresce con \\(p(z_t \\mid x^{[i]})\\) e viene normalizzato (\\(\\sum w = 1\\), con guardia zero-sum).',
-            eq: function (u) {
-              return (
-                '\\begin{aligned}w^{[i]} &\\propto \\exp\\!\\left(-\\frac{\\|z_t - x^{[i]}\\|^2}{2\\sigma^2}\\right)\\\\ N_{\\text{eff}} &= \\frac{1}{\\sum (w^{[i]})^2} = ' +
-                u.nEff.toFixed(1) +
-                ' / ' +
-                NUM_P +
-                '\\end{aligned}'
-              );
-            },
-            eqExplain: [
-              { sym: 'w^{[i]}', label: 'Punteggio Verosimiglianza', desc: 'Cresce esponenzialmente quando \\(x^{[i]}\\) è vicina alla misura \\(z_t\\).' },
-              { sym: '\\sigma^2', label: 'Tolleranza Sensore', desc: 'Varianza del sensore che regola quanto severamente vengono penalizzate le particelle lontane.' },
-              { sym: 'N_{\\text{eff}}', label: 'Campioni Efficaci', desc: 'Indica quante particelle hanno peso utile (se scende troppo, serve il resampling).' }
-            ]
-          },
-          {
-            title: 'Resampling — Ruota a Bassa Varianza + \\(\\alpha\\)-Trick',
-            desc:
-              'Un pettine di \\(M\\) puntatori equidistanti esplora il nastro cumulativo \\([0,1]\\) in \\(\\mathcal{O}(M)\\): i vincenti si duplicano (mitosi), e \\(\\alpha=5\\%\\) salva dal Kidnapping.',
-            eq: function (u) {
-              return (
-                '\\begin{aligned}U_i &= r + \\frac{i - 1}{M}, \\quad r \\sim \\mathcal{U}\\!\\left(0,\\tfrac{1}{M}\\right)\\\\ \\alpha_{\\text{rand}} &= ' +
-                (u.alphaOn ? '0.05\\;(\\text{4 scintille})' : '0.00\\;(\\text{spento})') +
-                '\\end{aligned}'
-              );
-            },
-            eqExplain: [
-              { sym: 'U_i', label: 'Puntatore del Pettine', desc: 'Raggi equidistanti attorno alla roulette: colpiscono più volte le fette dorate più larghe.' },
-              { sym: 'r', label: 'Singolo Offset Casuale', desc: 'Un solo numero casuale in \\([0, 1/M)\\) garantisce varianza minima in tempo \\(\\mathcal{O}(M)\\).' },
-              { sym: '\\alpha_{\\text{rand}}', label: 'Recupero Kidnapping', desc: 'Quota di particelle casuali fresche iniettate per ritrovare il robot se viene spostato di peso.' }
-            ]
-          }
-        ]
-      },
-      onReset: function (u) {
-        resetUser(u);
-      },
-      onLangChange: function (lang, u) {
-        syncExtraBtns(lang, u);
-      },
-      onEnterPhase: function (phase, u) {
-        if (phase === 0) {
-          if (u.nextParticles) {
-            u.particles = u.nextParticles;
-            u.nextParticles = null;
-          }
-          u.mean = weightedMean(u.particles);
-          u.nEff = NUM_P;
-        } else if (phase === 1) {
-          u.prevS = u.s;
-          var ds = 0.42;
-          u.s += ds;
-          var prevPose = poseAt(u.prevS);
-          var newPose = poseAt(u.s);
-          u.trueX = newPose.x;
-          u.trueY = newPose.y;
-          u.trueTh = newPose.th;
-          var dxNominal = newPose.x - prevPose.x;
-          var dyNominal = newPose.y - prevPose.y;
-
-          for (var i = 0; i < u.particles.length; i++) {
-            var p = u.particles[i];
-            p.prevX = p.x;
-            p.prevY = p.y;
-            p.bornAlpha = false;
-            p.dying = false;
-            p.targetX = M.clamp(p.x + dxNominal + M.randn() * 0.16, 0.3, WORLD_W - 0.3);
-            p.targetY = M.clamp(p.y + dyNominal + M.randn() * 0.16, 0.3, WORLD_H - 0.3);
-            p.x = p.targetX;
-            p.y = p.targetY;
-          }
-        } else if (phase === 2) {
-          u.zX = M.clamp(u.trueX + M.randn() * 0.22, 0.35, WORLD_W - 0.35);
-          u.zY = M.clamp(u.trueY + M.randn() * 0.22, 0.35, WORLD_H - 0.35);
-
-          var sumW = 0;
-          for (var i = 0; i < u.particles.length; i++) {
-            var p2 = u.particles[i];
-            p2.prevW = p2.w;
-            var dx = p2.x - u.zX;
-            var dy = p2.y - u.zY;
-            var raw = Math.exp(-(dx * dx + dy * dy) / (2 * SENS_SIG * SENS_SIG));
-            p2.targetW = raw;
-            sumW += raw;
-          }
-          if (sumW < 1e-12) {
-            for (var k = 0; k < u.particles.length; k++) {
-              u.particles[k].targetW = 1 / NUM_P;
-            }
-          } else {
-            for (var k2 = 0; k2 < u.particles.length; k2++) {
-              u.particles[k2].targetW /= sumW;
-            }
-          }
-          var sumSq = 0;
-          var mx = 0;
-          for (var k3 = 0; k3 < u.particles.length; k3++) {
-            var tw = u.particles[k3].targetW;
-            p2 = u.particles[k3];
-            p2.w = tw;
-            sumSq += tw * tw;
-            if (tw > mx) mx = tw;
-          }
-          u.maxW = mx;
-          u.nEff = sumSq > 1e-9 ? 1 / sumSq : NUM_P;
-          u.mean = weightedMean(u.particles);
-        } else if (phase === 3) {
-          var nextArr = [];
-          var alphaCount = u.alphaOn ? Math.max(2, Math.round(NUM_P * 0.05)) : 0;
-          var resampledCount = NUM_P - alphaCount;
-
-          // Build CDF on current particle weights
-          var cdf = [];
-          var acc = 0;
-          for (var i = 0; i < u.particles.length; i++) {
-            acc += u.particles[i].w;
-            cdf.push(acc);
-          }
-          cdf[cdf.length - 1] = 1.0;
-
-          var survivedIndices = {};
-          var r0 = Math.random() * (1 / resampledCount);
-          var c = cdf[0];
-          var idx = 0;
-          for (var m = 0; m < resampledCount; m++) {
-            var U = r0 + m / resampledCount;
-            while (U > c && idx < u.particles.length - 1) {
-              idx++;
-              c = cdf[idx];
-            }
-            survivedIndices[idx] = true;
-            var par = u.particles[idx];
-            nextArr.push({
-              parentX: par.x,
-              parentY: par.y,
-              prevX: par.x,
-              prevY: par.y,
-              targetX: M.clamp(par.x + M.randn() * 0.075, 0.3, WORLD_W - 0.3),
-              targetY: M.clamp(par.y + M.randn() * 0.075, 0.3, WORLD_H - 0.3),
-              x: par.x,
-              y: par.y,
-              w: 1 / NUM_P,
-              prevW: par.w,
-              targetW: 1 / NUM_P,
-              bornAlpha: false,
-              dying: false
-            });
-          }
-
-          for (var a = 0; a < alphaCount; a++) {
-            var rx = 0.6 + Math.random() * (WORLD_W - 1.2);
-            var ry = 0.6 + Math.random() * (WORLD_H - 1.2);
-            nextArr.push({
-              parentX: rx,
-              parentY: ry,
-              prevX: rx,
-              prevY: ry,
-              targetX: rx,
-              targetY: ry,
-              x: rx,
-              y: ry,
-              w: 1 / NUM_P,
-              prevW: 1 / NUM_P,
-              targetW: 1 / NUM_P,
-              bornAlpha: true,
-              dying: false
-            });
-          }
-
-          for (var d = 0; d < u.particles.length; d++) {
-            u.particles[d].dying = !survivedIndices[d];
-          }
-          u.nextParticles = nextArr;
-        }
-      },
-      getTelemetry: function (lang, u, st) {
-        var err = Math.hypot(u.mean.x - u.trueX, u.mean.y - u.trueY);
-        return [
-          {
-            label: lang === 'it' ? 'Particelle Eff.' : 'Eff. Sample Size',
-            value: u.nEff.toFixed(1) + ' / ' + NUM_P,
-            gold: st.phase === 2
-          },
-          {
-            label: lang === 'it' ? 'Errore Medio' : 'Mean Error',
-            value: err.toFixed(2) + ' m',
-            gold: true
-          },
-          {
-            label: lang === 'it' ? 'Strategia' : 'Recovery',
-            value: u.alphaOn ? 'α = 5%' : 'Pure O(M)'
-          }
-        ];
-      },
-      onRender: function (ctx, w, h, phase, progress, dt, lang, u) {
-        D.obsidianBg(ctx, w, h);
-
-        var padX = 18;
-        var padTop = 18;
-        var isWide = w >= 470;
-        var arenaW = isWide ? Math.round((w - padX * 2) * 0.64) : w - padX * 2;
-        var arenaH = isWide ? h - padTop - 18 : Math.round((h - padTop - 18) * 0.56);
-
-        function toPx(wx, wy) {
-          return {
-            x: padX + (wx / WORLD_W) * arenaW,
-            y: padTop + (wy / WORLD_H) * arenaH
-          };
-        }
-
-        // Hairline grid inside arena
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(padX, padTop, arenaW, arenaH);
-        D.hairlineGrid(ctx, padX, padTop, arenaW, arenaH, arenaW / 10, 0.035);
-        ctx.restore();
-
-        // Subtle reference oval track
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.09)';
-        ctx.setLineDash([4, 6]);
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        for (var i = 0; i <= 80; i++) {
-          var th = (i / 80) * Math.PI * 2;
-          var pt = poseAt(th);
-          var px = toPx(pt.x, pt.y);
-          if (i === 0) ctx.moveTo(px.x, px.y);
-          else ctx.lineTo(px.x, px.y);
-        }
-        ctx.closePath();
-        ctx.stroke();
-        ctx.restore();
-
-        // Static landmarks (subtle slate beacons)
-        for (var lm = 0; lm < u.landmarks.length; lm++) {
-          var lp = toPx(u.landmarks[lm].x, u.landmarks[lm].y);
-          ctx.save();
-          ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
-          ctx.lineWidth = 1.2;
-          ctx.strokeRect(lp.x - 4.5, lp.y - 4.5, 9, 9);
-          ctx.fillStyle = 'rgba(148, 163, 184, 0.55)';
-          ctx.fillRect(lp.x - 1.5, lp.y - 1.5, 3, 3);
-          ctx.restore();
-        }
-
-        var e = M.easeInOutCubic(progress);
-
-        // Animated true robot pose
-        var animS = phase === 1 ? M.lerp(u.prevS, u.s, e) : u.s;
-        var robPose = poseAt(animS);
-        var robPx = toPx(robPose.x, robPose.y);
-
-        // Sensor Spotlight during Phase 2 & fading in Phase 3
-        if (phase === 2 || phase === 3) {
-          var zp = toPx(u.zX, u.zY);
-          var spotR = (SENS_SIG * 1.8 / WORLD_W) * arenaW;
-          var spotAlpha = phase === 2 ? M.easeOutCubic(progress) : 1 - e;
-          ctx.save();
-          var grad = ctx.createRadialGradient(zp.x, zp.y, 2, zp.x, zp.y, spotR);
-          grad.addColorStop(0, 'rgba(224, 122, 95, ' + (0.28 * spotAlpha).toFixed(2) + ')');
-          grad.addColorStop(0.6, 'rgba(224, 122, 95, ' + (0.09 * spotAlpha).toFixed(2) + ')');
-          grad.addColorStop(1, 'rgba(224, 122, 95, 0)');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(zp.x, zp.y, spotR, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.strokeStyle = 'rgba(224, 122, 95, ' + (0.65 * spotAlpha).toFixed(2) + ')';
-          ctx.lineWidth = 1.2;
-          ctx.setLineDash([4, 4]);
-          ctx.beginPath();
-          ctx.arc(zp.x, zp.y, (SENS_SIG / WORLD_W) * arenaW, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.fillStyle = 'rgba(224, 122, 95, ' + spotAlpha.toFixed(2) + ')';
-          ctx.beginPath();
-          ctx.arc(zp.x, zp.y, 4, 0, Math.PI * 2);
-          ctx.fill();
-          D.labelPill(ctx, 'z_t', zp.x + 8, zp.y - 8, 'left', 'rgba(224, 122, 95, ' + spotAlpha.toFixed(2) + ')');
-          ctx.restore();
-        }
-
-        // Particles rendering per phase
-        if (phase === 3 && u.nextParticles) {
-          // Fading losers
-          for (var j = 0; j < u.particles.length; j++) {
-            var oldP = u.particles[j];
-            if (!oldP.dying) continue;
-            var op = toPx(oldP.x, oldP.y);
-            var fade = 1 - e;
-            ctx.fillStyle = 'rgba(148, 163, 184, ' + (0.28 * fade).toFixed(2) + ')';
-            ctx.beginPath();
-            ctx.arc(op.x, op.y, 2.2 * fade, 0, Math.PI * 2);
-            ctx.fill();
-          }
-
-          // Smooth mitosis clones + alpha sparks
-          for (var k = 0; k < u.nextParticles.length; k++) {
-            var np = u.nextParticles[k];
-            var curX = M.lerp(np.parentX, np.targetX, e);
-            var curY = M.lerp(np.parentY, np.targetY, e);
-            var pPx = toPx(curX, curY);
-            if (np.bornAlpha) {
-              ctx.save();
-              ctx.strokeStyle = 'rgba(255, 208, 0, ' + (0.9 * e).toFixed(2) + ')';
-              ctx.lineWidth = 1.4;
-              ctx.beginPath();
-              ctx.arc(pPx.x, pPx.y, 4.5, 0, Math.PI * 2);
-              ctx.stroke();
-              ctx.restore();
-            } else {
-              var rLerp = M.lerp(4.4, 3.0, e);
-              ctx.fillStyle = 'rgba(255, 208, 0, 0.78)';
-              ctx.beginPath();
-              ctx.arc(pPx.x, pPx.y, rLerp, 0, Math.PI * 2);
-              ctx.fill();
-            }
-          }
-        } else {
-          var maxW = Math.max(u.maxW, 1 / NUM_P);
-          for (var i2 = 0; i2 < u.particles.length; i2++) {
-            var p = u.particles[i2];
-            var wx = phase === 1 ? M.lerp(p.prevX, p.targetX, e) : p.x;
-            var wy = phase === 1 ? M.lerp(p.prevY, p.targetY, e) : p.y;
-            var wCur = phase === 2 ? M.lerp(p.prevW, p.targetW, e) : p.w;
-            var normW = wCur / maxW;
-
-            var pos = toPx(wx, wy);
-
-            if (phase === 1) {
-              var prevPos = toPx(p.prevX, p.prevY);
-              ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
-              ctx.lineWidth = 1;
-              ctx.beginPath();
-              ctx.moveTo(prevPos.x, prevPos.y);
-              ctx.lineTo(pos.x, pos.y);
-              ctx.stroke();
-            }
-
-            var rad = phase === 2 ? M.lerp(2.2, 6.2, normW) : 2.8;
-            var alpha = phase === 2 ? M.lerp(0.18, 0.95, normW) : 0.72;
-            ctx.fillStyle =
-              phase === 1
-                ? 'rgba(148, 163, 184, 0.75)'
-                : phase === 2 && normW < 0.25
-                  ? 'rgba(148, 163, 184, ' + alpha.toFixed(2) + ')'
-                  : 'rgba(255, 208, 0, ' + alpha.toFixed(2) + ')';
-            ctx.beginPath();
-            ctx.arc(pos.x, pos.y, rad, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-
-        // Weighted mean crosshair
-        var meanPx = toPx(u.mean.x, u.mean.y);
-        ctx.save();
-        ctx.strokeStyle = '#ffd000';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(meanPx.x - 7, meanPx.y);
-        ctx.lineTo(meanPx.x + 7, meanPx.y);
-        ctx.moveTo(meanPx.x, meanPx.y - 7);
-        ctx.lineTo(meanPx.x, meanPx.y + 7);
-        ctx.stroke();
-        ctx.restore();
-
-        // Kidnap flash ring
-        if (u.kidnapFlash > 0) {
-          u.kidnapFlash = Math.max(0, u.kidnapFlash - dt * 1.6);
-          ctx.save();
-          ctx.strokeStyle = 'rgba(224, 122, 95, ' + u.kidnapFlash.toFixed(2) + ')';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(robPx.x, robPx.y, 12 + (1 - u.kidnapFlash) * 26, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
-        }
-
-        // True robot pose marker
-        D.poseArrow(ctx, robPx.x, robPx.y, robPose.th, 8.5, '#f4f4f6', '#121215');
-
-        // Right / Bottom Panel: Circular Roulette Wheel & Low-Variance Resampling Comb
-        var panelX = isWide ? padX + arenaW + 14 : padX;
-        var panelY = isWide ? padTop : padTop + arenaH + 12;
-        var panelW = isWide ? w - padX - panelX : arenaW;
-        var panelH = isWide ? arenaH : h - panelY - 12;
-
-        ctx.save();
-        ctx.fillStyle = '#101014';
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-        ctx.lineWidth = 1;
-        ctx.fillRect(panelX, panelY, panelW, panelH);
-        ctx.strokeRect(panelX, panelY, panelW, panelH);
-
-        D.labelPill(
-          ctx,
-          lang === 'it' ? 'RUOTA ROULETTE O(M)' : 'ROULETTE WHEEL O(M)',
-          panelX + panelW / 2,
-          panelY + 14,
-          'center',
-          phase === 3 ? '#ffd000' : '#a1a1aa'
-        );
-
-        var cx = panelX + panelW / 2;
-        var cy = panelY + panelH * 0.53;
-        var rOut = Math.max(32, Math.min(panelW * 0.39, (panelH - 46) * 0.42));
-        var rIn = rOut * 0.42;
-
-        // Spin the wheel smoothly during Phase 3 (Resample)
-        var spinAngle = phase === 3 ? M.easeOutCubic(progress) * Math.PI * 2.25 : 0;
-        var curAng = -Math.PI / 2 + spinAngle;
-
-        for (var b = 0; b < u.particles.length; b++) {
-          var wb = Math.max(0, u.particles[b].w);
-          var sweepAng = wb * Math.PI * 2;
-          if (sweepAng <= 0.002) {
-            curAng += sweepAng;
-            continue;
-          }
-          var normWb = u.maxW > 0 ? M.clamp(wb / u.maxW, 0, 1) : 0;
-          ctx.beginPath();
-          ctx.arc(cx, cy, rOut, curAng, curAng + sweepAng);
-          ctx.arc(cx, cy, rIn, curAng + sweepAng, curAng, true);
-          ctx.closePath();
-
-          if (normWb > 0.35) {
-            ctx.fillStyle = b % 2 === 0 ? 'rgba(255, 208, 0, 0.85)' : 'rgba(255, 208, 0, 0.58)';
-          } else if (normWb > 0.12) {
-            ctx.fillStyle = b % 2 === 0 ? 'rgba(224, 122, 95, 0.72)' : 'rgba(224, 122, 95, 0.48)';
-          } else {
-            ctx.fillStyle = b % 2 === 0 ? 'rgba(148, 163, 184, 0.28)' : 'rgba(148, 163, 184, 0.15)';
-          }
-          ctx.fill();
-          ctx.strokeStyle = '#0a0a0c';
-          ctx.lineWidth = sweepAng > 0.08 ? 1.1 : 0.4;
-          ctx.stroke();
-
-          curAng += sweepAng;
-        }
-
-        // Inner hub
-        ctx.beginPath();
-        ctx.arc(cx, cy, rIn - 2, 0, Math.PI * 2);
-        ctx.fillStyle = '#0d0d10';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.14)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        D.labelPill(
-          ctx,
-          phase === 3 ? 'r + i/M' : 'Neff ' + Math.round(u.nEff),
-          cx,
-          cy,
-          'center',
-          phase === 3 ? '#ffd000' : '#a1a1aa'
-        );
-
-        // Evenly-spaced Low-Variance Comb pointers around the rim
-        var needles = 16;
-        var combActive = phase === 3;
-        var combOpacity = combActive ? 0.35 + 0.65 * Math.min(1, progress * 1.4) : 0.22;
-        var combRot = -Math.PI / 2 + (combActive ? 0.18 : 0);
-        for (var n = 0; n < needles; n++) {
-          var a = combRot + (n / needles) * Math.PI * 2;
-          var x1 = cx + Math.cos(a) * (rOut + 9);
-          var y1 = cy + Math.sin(a) * (rOut + 9);
-          var x2 = cx + Math.cos(a) * (rOut - 4);
-          var y2 = cy + Math.sin(a) * (rOut - 4);
-          ctx.strokeStyle = combActive
-            ? 'rgba(244, 244, 246, ' + combOpacity.toFixed(2) + ')'
-            : 'rgba(148, 163, 184, 0.25)';
-          ctx.lineWidth = combActive ? 1.5 : 1;
-          ctx.beginPath();
-          ctx.moveTo(x1, y1);
-          ctx.lineTo(x2, y2);
-          ctx.stroke();
-
-          if (combActive) {
-            ctx.fillStyle = '#ffd000';
-            ctx.beginPath();
-            ctx.arc(x1, y1, 2.0, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-
-        D.labelPill(
-          ctx,
-          phase === 3
-            ? lang === 'it' ? 'Rotazione + Pettine' : 'Spinning + Comb'
-            : lang === 'it' ? 'Fette ∝ w_i' : 'Slices ∝ w_i',
-          cx,
-          panelY + panelH - 12,
-          'center',
-          '#71717a'
-        );
-        ctx.restore();
-      }
+    var X_RESAMPLED = RESAMPLED_SRC.map(function (src, i) {
+      return C.clamp(X2[src] + EPS[i] * 0.6, 0.2, 9.8);
     });
 
-    if (btnKidnap) {
-      btnKidnap.addEventListener('click', function () {
-        var u = lab.state.user;
-        u.s += Math.PI * 0.85;
-        u.prevS = u.s;
-        var p = poseAt(u.s);
-        u.trueX = p.x;
-        u.trueY = p.y;
-        u.trueTh = p.th;
-        u.zX = p.x;
-        u.zY = p.y;
-        u.kidnapFlash = 1.0;
-        lab.refresh();
+    // Scene 5 Kidnap at x = 2.0: 10 particles near 8.6 + 2 alpha-injected explorers near 1.9 & 2.2
+    var X_KIDNAP = [8.42, 8.55, 8.61, 8.68, 8.74, 8.50, 8.63, 8.71, 8.58, 8.66, 1.92, 2.18];
+    var W_KIDNAP_RECOV = normalize(X_KIDNAP.map(function (x) {
+      return gaussUnnorm(x, 2.0, 0.45) + 0.008;
+    }));
+
+    var SCENES = [
+      { id: 0, start: 0.0,  end: 9.0,  tag: 'init (M = 12)',          shortEn: '0. Uniform',    shortIt: '0. Uniforme' },
+      { id: 1, start: 9.0,  end: 18.0, tag: 'predict (+u + Q)',       shortEn: '1. Predict',    shortIt: '1. Moto' },
+      { id: 2, start: 18.0, end: 29.0, tag: 'weight (bimodal)',       shortEn: '2. 2 Doors',    shortIt: '2. 2 Porte' },
+      { id: 3, start: 29.0, end: 39.0, tag: 'degeneracy (N_eff)',     shortEn: '3. Lock & Deg', shortIt: '3. Degenera' },
+      { id: 4, start: 39.0, end: 50.0, tag: 'low-variance O(M)',      shortEn: '4. Roulette',   shortIt: '4. Ruota' },
+      { id: 5, start: 50.0, end: 60.0, tag: 'kidnap + α-trick',       shortEn: '5. α-Trick',    shortIt: '5. α-Trick' }
+    ];
+
+    function drawCorridor(ctx, w, h, xToPx, trackY, showBeacon, robotX, lang) {
+      var xL = xToPx(0), xR = xToPx(10);
+      ctx.save();
+      // Corridor floor
+      ctx.fillStyle = '#101016';
+      ctx.fillRect(xL, trackY - 34, xR - xL, 68);
+      ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+      ctx.lineWidth = 1.4;
+      ctx.strokeRect(xL, trackY - 34, xR - xL, 68);
+
+      // Two identical doors at x=2.0 m and x=8.0 m
+      [2.0, 8.0].forEach(function (dx, idx) {
+        var px = xToPx(dx);
+        ctx.fillStyle = 'rgba(224, 122, 95, 0.22)';
+        ctx.strokeStyle = '#e07a5f';
+        ctx.lineWidth = 1.6;
+        ctx.fillRect(px - 14, trackY - 34, 28, 12);
+        ctx.strokeRect(px - 14, trackY - 34, 28, 12);
+        ctx.font = '700 10px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#e07a5f';
+        ctx.textAlign = 'center';
+        ctx.fillText((lang === 'it' ? 'Porta ' : 'Door ') + (idx + 1) + ' (' + dx.toFixed(0) + 'm)', px, trackY - 40);
       });
+
+      // Asymmetric landmark at x=8.6 m
+      if (showBeacon) {
+        var bx = xToPx(8.6);
+        ctx.fillStyle = 'rgba(52, 211, 153, 0.25)';
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.arc(bx, trackY - 26, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.font = '700 9.5px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#34d399';
+        ctx.textAlign = 'center';
+        ctx.fillText('Tag (8.6m)', bx, trackY - 54);
+      }
+
+      // Ruler ticks
+      ctx.font = '600 10px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#7c7c94';
+      ctx.textAlign = 'center';
+      for (var m = 0; m <= 10; m += 2) {
+        var tx = xToPx(m);
+        ctx.fillText(m + ' m', tx, trackY + 48);
+      }
+
+      // True robot marker
+      if (robotX !== null) {
+        var rx = xToPx(robotX);
+        ctx.fillStyle = '#14141c';
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 2;
+        C.roundRect(ctx, rx - 14, trackY - 12, 28, 24, 6);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#34d399';
+        ctx.beginPath(); ctx.arc(rx + 6, trackY, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.font = '700 10px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(lang === 'it' ? 'Robot reale' : 'True robot', rx, trackY + 26);
+      }
+      ctx.restore();
     }
 
-    if (btnAlpha) {
-      btnAlpha.addEventListener('click', function () {
-        lab.state.user.alphaOn = !lab.state.user.alphaOn;
-        syncExtraBtns(lab.getLang(), lab.state.user);
-        lab.refresh();
-      });
+    function drawLikelihoodCurve(ctx, xToPx, baseY, height, evalFn, color) {
+      ctx.save();
+      ctx.beginPath();
+      for (var xm = 0; xm <= 10; xm += 0.05) {
+        var px = xToPx(xm);
+        var py = baseY - evalFn(xm) * height;
+        if (xm === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.lineTo(xToPx(10), baseY); ctx.lineTo(xToPx(0), baseY); ctx.closePath();
+      ctx.fillStyle = color; ctx.globalAlpha = 0.16; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.beginPath();
+      for (var xm2 = 0; xm2 <= 10; xm2 += 0.05) {
+        var px2 = xToPx(xm2), py2 = baseY - evalFn(xm2) * height;
+        if (xm2 === 0) ctx.moveTo(px2, py2); else ctx.lineTo(px2, py2);
+      }
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+      ctx.restore();
     }
 
-    syncExtraBtns(lab.getLang(), lab.state.user);
+    function drawParticles(ctx, xToPx, baseY, xs, ws, maxBarH, api, prefix, highlightAlphaIdx) {
+      var maxW = 0.05;
+      for (var k = 0; k < ws.length; k++) if (ws[k] > maxW) maxW = ws[k];
+      for (var i = 0; i < xs.length; i++) {
+        var px = xToPx(xs[i]);
+        var hBar = (ws[i] / maxW) * maxBarH;
+        var isAlpha = highlightAlphaIdx && i >= highlightAlphaIdx;
+        var col = isAlpha ? '#34d399' : (ws[i] > 0.10 ? '#ffd000' : '#60a5fa');
+        ctx.save();
+        ctx.strokeStyle = col;
+        ctx.lineWidth = ws[i] > 0.10 ? 4.5 : 2.5;
+        ctx.beginPath(); ctx.moveTo(px, baseY); ctx.lineTo(px, baseY - Math.max(4, hBar)); ctx.stroke();
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(px, baseY - Math.max(4, hBar), ws[i] > 0.10 ? 5.2 : 3.4, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        if (api && prefix) api.setAnchor(prefix + i, px, baseY - Math.max(4, hBar));
+      }
+    }
+
+    function renderParticleList(xs, ws, lang, alphaFrom) {
+      var html = '<div class="cn-pt-grid">';
+      for (var i = 0; i < M; i++) {
+        var pct = Math.round(ws[i] * 100);
+        var cls = 'cn-pt-row' + (ws[i] > 0.12 ? ' hot' : ws[i] < 0.02 ? ' dead' : '');
+        var col = (alphaFrom !== undefined && i >= alphaFrom) ? '#34d399' : (ws[i] > 0.12 ? '#ffd000' : '#60a5fa');
+        html += '<div class="' + cls + '" data-anchor="pt-row-' + i + '" data-tip-id="pt" data-tip-r="' + i + '" data-tip-val="x=' + xs[i].toFixed(2) + ' m · w=' + ws[i].toFixed(3) + '">' +
+          '<span style="color:#7c7c94;">#' + (i + 1) + '</span>' +
+          '<span style="color:#f4f4f6;">' + xs[i].toFixed(2) + 'm</span>' +
+          '<div class="cn-pt-bar-track"><div class="cn-pt-bar-fill" style="width:' + Math.min(100, pct * 2.2) + '%;background:' + col + ';"></div></div>' +
+          '<span style="text-align:right;color:' + col + ';">' + pct + '%</span>' +
+          '</div>';
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function getCurrentParticles(t) {
+      if (t < 9.0) return { xs: X0, ws: W_UNIF };
+      if (t < 18.0) {
+        var p1 = C.easeInOutCubic(C.invLerp(9.5, 16.5, t));
+        return { xs: X0.map(function (x, i) { return C.lerp(x, X1[i], p1); }), ws: W_UNIF };
+      }
+      if (t < 29.0) {
+        var p2 = C.easeOutCubic(C.invLerp(19.5, 25.5, t));
+        return { xs: X1, ws: W_UNIF.map(function (w, i) { return C.lerp(w, W_BIMODAL[i], p2); }) };
+      }
+      if (t < 39.0) {
+        var p3 = C.easeInOutCubic(C.invLerp(30.0, 36.5, t));
+        return {
+          xs: X1.map(function (x, i) { return C.lerp(x, X2[i], Math.min(1, p3 * 1.4)); }),
+          ws: W_BIMODAL.map(function (w, i) { return C.lerp(w, W_UNIMODAL[i], p3); })
+        };
+      }
+      if (t < 50.0) {
+        var p4 = C.easeInOutCubic(C.invLerp(45.0, 49.0, t));
+        return {
+          xs: X2.map(function (x, i) { return C.lerp(x, X_RESAMPLED[i], p4); }),
+          ws: W_UNIMODAL.map(function (w, i) { return C.lerp(w, W_UNIF[i], p4); })
+        };
+      }
+      var p5 = C.easeOutCubic(C.invLerp(53.0, 58.5, t));
+      return { xs: X_KIDNAP, ws: W_UNIF.map(function (w, i) { return C.lerp(w, W_KIDNAP_RECOV[i], p5); }) };
+    }
+
+    C.mount({
+      id: 'lab-pf',
+      duration: 60.0,
+      scenes: SCENES,
+      mathTitleEn: 'Particle Set (M = 12)',
+      mathTitleIt: 'Set di Particelle (M = 12)',
+
+      getMetric: function (t) {
+        var cur = getCurrentParticles(t);
+        var neff = calcNeff(cur.ws);
+        var col = neff < 3.5 ? '#e07a5f' : neff < 7 ? '#ffd000' : '#34d399';
+        return { label: 'N_eff', pct: (neff / M) * 100, text: neff.toFixed(1) + ' / 12', color: col };
+      },
+
+      getSubtitle: function (t, lang) {
+        var it = lang === 'it';
+        if (t < 9.0) {
+          return { color: '#60a5fa', text: it ? 'Localizzazione globale: 12 cloni vengono sparsi uniformemente nel corridoio con peso uguale \\(w_0^{[i]} = 1/12 = 0.083\\) (\\(N_{\\text{eff}} = 12.0\\)).' : 'Global localization: 12 clones are spread uniformly along the corridor with equal weight \\(w_0^{[i]} = 1/12 = 0.083\\) (\\(N_{\\text{eff}} = 12.0\\)).' };
+        }
+        if (t < 18.0) {
+          return { color: '#ffd000', text: it ? 'Predizione stocastica: ogni clone avanza di \\(u = +0.60\\text{ m}\\) più un rumore indipendente \\(\\epsilon^{[i]} \\sim \\mathcal{N}(0, Q)\\).' : 'Stochastic predict: each clone advances by \\(u = +0.60\\text{ m}\\) plus an independent sample \\(\\epsilon^{[i]} \\sim \\mathcal{N}(0, Q)\\).' };
+        }
+        if (t < 29.0) {
+          return { color: '#e07a5f', text: it ? 'Il sensore rileva una porta ma ci sono due porte identiche (\\(2\\text{ m}\\) e \\(8\\text{ m}\\)): la verosimiglianza \\(p(z_t\\mid x)\\) forma una distribuzione bimodale impossibile per un KF.' : 'The sensor detects a door, matching both identical doors (\\(2\\text{ m}\\) and \\(8\\text{ m}\\)): likelihood \\(p(z_t\\mid x)\\) creates a bimodal belief impossible for a KF.' };
+        }
+        if (t < 39.0) {
+          return { color: '#e07a5f', text: it ? 'Il landmark asimmetrico a \\(8.6\\text{ m}\\) rompe la simmetria: il cluster sinistro si azzera e \\(N_{\\text{eff}}\\) crolla verso \\(2\\) (degenerazione dei pesi).' : 'The asymmetric landmark at \\(8.6\\text{ m}\\) breaks symmetry: the left cluster dies out and \\(N_{\\text{eff}}\\) drops near \\(2\\) (weight degeneracy).' };
+        }
+        if (t < 50.0) {
+          return { color: '#ffd000', text: it ? 'Ruota a bassa varianza \\(\\mathcal{O}(M)\\): un solo offset \\(r\\) genera 12 raggi equidistanti \\(U_i = r + (i-1)/12\\) che duplicano i cloni vincenti e azzerano quelli morti.' : 'Low-variance roulette \\(\\mathcal{O}(M)\\): one offset \\(r\\) places 12 equidistant spokes \\(U_i = r + (i-1)/12\\), duplicating top clones and pruning dead ones.' };
+        }
+        return { color: '#34d399', text: it ? 'Kidnapping a \\(x = 2.0\\text{ m}\\): i cloni esploratori iniettati con \\(\\alpha\\text{-trick}\\) (#11, #12) intercettano la Porta 1 e recuperano la posizione.' : 'Kidnapping to \\(x = 2.0\\text{ m}\\): random \\(\\alpha\\text{-trick}\\) explorers (#11, #12) catch Door 1 and recover global localization.' };
+      },
+
+      drawCanvas: function (ctx, w, h, t, lang, api) {
+        var it = lang === 'it';
+        var pad = 34;
+        var xToPx = function (xm) { return pad + (xm / 10) * (w - pad * 2); };
+        var cur = getCurrentParticles(t);
+
+        // Scene 4 shows the circular Low-Variance Roulette wheel on top + corridor below
+        if (t >= 39.0 && t < 50.0) {
+          api.setMode(it ? 'RUOTA A BASSA VARIANZA O(M)' : 'LOW-VARIANCE ROULETTE O(M)', 'gold');
+          api.setCoords('U_i = 0.03 + (i - 1) / 12');
+
+          var wheelCX = w * 0.5, wheelCY = h * 0.36, R = Math.min(w, h) * 0.27;
+          var startAng = -Math.PI * 0.5;
+          var acc = 0;
+          for (var i = 0; i < M; i++) {
+            var a0 = startAng + acc * Math.PI * 2;
+            var a1 = startAng + (acc + W_UNIMODAL[i]) * Math.PI * 2;
+            acc += W_UNIMODAL[i];
+            if (W_UNIMODAL[i] > 0.01) {
+              ctx.save();
+              ctx.beginPath(); ctx.moveTo(wheelCX, wheelCY); ctx.arc(wheelCX, wheelCY, R, a0, a1); ctx.closePath();
+              ctx.fillStyle = i === 9 ? 'rgba(255,208,0,0.42)' : i === 10 ? 'rgba(96,165,250,0.38)' : 'rgba(224,122,95,0.34)';
+              ctx.fill();
+              ctx.strokeStyle = '#08080a'; ctx.lineWidth = 1.5; ctx.stroke();
+              var midA = (a0 + a1) * 0.5;
+              if (W_UNIMODAL[i] > 0.08) {
+                ctx.font = '700 10.5px "JetBrains Mono", monospace'; ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+                ctx.fillText('#' + (i + 1) + ' (' + Math.round(W_UNIMODAL[i] * 100) + '%)', wheelCX + Math.cos(midA) * R * 0.62, wheelCY + Math.sin(midA) * R * 0.62 + 4);
+              }
+              ctx.restore();
+            }
+          }
+          // Draw rotating comb with 12 equidistant spokes
+          var combP = C.easeOutCubic(C.invLerp(39.5, 44.5, t));
+          var nSpokes = Math.min(M, Math.floor(combP * M) + 1);
+          for (var s = 0; s < nSpokes; s++) {
+            var ang = startAng + (R_OFFSET + s / M) * Math.PI * 2;
+            ctx.strokeStyle = '#34d399'; ctx.lineWidth = 1.6;
+            ctx.beginPath(); ctx.moveTo(wheelCX, wheelCY); ctx.lineTo(wheelCX + Math.cos(ang) * (R + 10), wheelCY + Math.sin(ang) * (R + 10)); ctx.stroke();
+            ctx.fillStyle = '#34d399';
+            ctx.beginPath(); ctx.arc(wheelCX + Math.cos(ang) * (R + 10), wheelCY + Math.sin(ang) * (R + 10), 3, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.fillStyle = '#08080a'; ctx.beginPath(); ctx.arc(wheelCX, wheelCY, 14, 0, Math.PI * 2); ctx.fill();
+          api.setAnchor('pf-wheel', wheelCX + R, wheelCY);
+
+          drawCorridor(ctx, w, h, xToPx, h * 0.84, true, 8.6, lang);
+          drawParticles(ctx, xToPx, h * 0.84, cur.xs, cur.ws, 42, api, 'pf-p-');
+          return;
+        }
+
+        var baseY = h * 0.56, trackY = h * 0.78, barH = h * 0.34;
+        var robotX = t < 9 ? 7.6 : t < 18 ? C.lerp(7.6, 8.2, C.easeInOutCubic(C.invLerp(9.5, 16.5, t))) : t < 29 ? 8.2 : t < 50 ? 8.6 : 2.0;
+
+        if (t < 9.0) {
+          api.setMode(it ? 'NUBE UNIFORME' : 'UNIFORM CLOUD', '');
+          api.setCoords('M = 12 · w = 0.083');
+        } else if (t < 18.0) {
+          api.setMode(it ? 'PREDIZIONE STOCASTICA' : 'STOCHASTIC PREDICT', 'gold');
+          api.setCoords('u = +0.60 m · noise Q');
+        } else if (t < 29.0) {
+          api.setMode(it ? 'VEROSIMIGLIANZA BIMODALE' : 'BIMODAL LIKELIHOOD', 'coral');
+          api.setCoords(it ? '2 porte compatibili' : '2 matching doors');
+          drawLikelihoodCurve(ctx, xToPx, baseY, barH, function (x) { return Math.min(1, gaussUnnorm(x, 2.0, 0.52) + gaussUnnorm(x, 8.0, 0.52)); }, '#e07a5f');
+        } else if (t < 39.0) {
+          api.setMode(it ? 'ROTTURA SIMMETRIA' : 'SYMMETRY BREAKING', 'coral');
+          api.setCoords('Landmark @ 8.6 m');
+          drawLikelihoodCurve(ctx, xToPx, baseY, barH, function (x) { return gaussUnnorm(x, 8.6, 0.45); }, '#34d399');
+        } else {
+          api.setMode(it ? 'KIDNAPPING & α-TRICK' : 'KIDNAPPING & α-TRICK', 'emerald');
+          api.setCoords('Robot → 2.0 m · α = 15%');
+          drawLikelihoodCurve(ctx, xToPx, baseY, barH, function (x) { return gaussUnnorm(x, 2.0, 0.45); }, '#34d399');
+        }
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(xToPx(0), baseY); ctx.lineTo(xToPx(10), baseY); ctx.stroke();
+
+        drawCorridor(ctx, w, h, xToPx, trackY, t >= 29.0 && t < 50.0, robotX, lang);
+        drawParticles(ctx, xToPx, baseY, cur.xs, cur.ws, barH, api, 'pf-p-', t >= 50.0 ? 10 : undefined);
+      },
+
+      renderPanel: function (t, lang, api) {
+        var it = lang === 'it';
+        var cur = getCurrentParticles(t);
+        var neff = calcNeff(cur.ws);
+        if (t < 9.0) {
+          api.renderFormula(it ? 'Inizializzazione Monte Carlo' : 'Monte Carlo Initialization', [
+            { tex: '\\chi_0 = \\{(x_0^{[i]}, w_0^{[i]})\\}_{i=1}^{12}, \\qquad w_0^{[i]} = \\frac{1}{12} = 0.083' },
+            { tex: 'N_{\\text{eff}} = \\frac{1}{\\sum (w_0^{[i]})^2} = {\\color{#34d399}12.0}' }
+          ], null, 'cyan');
+        } else if (t < 18.0) {
+          api.renderFormula(it ? 'Campionamento del Moto' : 'Stochastic Motion Sampling', [
+            { tex: 'x_t^{[i]} \\sim p(x_t \\mid u_t, x_{t-1}^{[i]}) = x_{t-1}^{[i]} + 0.60 + \\epsilon^{[i]}' },
+            { tex: '\\epsilon^{[i]} \\sim \\mathcal{N}(0, Q), \\qquad w_t^{[i]} = 0.083' }
+          ]);
+        } else if (t < 29.0) {
+          api.renderFormula(it ? 'Pesatura Bimodale' : 'Bimodal Importance Weighting', [
+            { tex: 'w_t^{[i]} = \\eta\\,p(z_t \\mid x_t^{[i]}), \\qquad N_{\\text{eff}} = {\\color{#ffd000}' + neff.toFixed(1) + '}' }
+          ], '<span>' + (it ? 'Due picchi: 2.0 m e 8.0 m' : 'Two peaks: 2.0 m and 8.0 m') + '</span>', 'coral');
+        } else if (t < 39.0) {
+          api.renderFormula(it ? 'Degenerazione dei Pesi' : 'Weight Degeneracy', [
+            { tex: 'w_t^{[i]} \\propto w_{t-1}^{[i]}\\,p(z_{\\text{tag}} \\mid x_t^{[i]}), \\qquad N_{\\text{eff}} = {\\color{#e07a5f}' + neff.toFixed(1) + '} < \\frac{M}{2}' }
+          ], '<span>' + (it ? 'Richiesto ricampionamento' : 'Resampling triggered') + '</span>', 'coral');
+        } else if (t < 50.0) {
+          api.renderFormula(it ? 'Pettine a Bassa Varianza' : 'Low-Variance Comb', [
+            { tex: 'U_i = r + \\frac{i-1}{12}, \\quad r = 0.03 \\quad \\Longrightarrow \\quad \\mathcal{O}(M)', anchor: 'pf-eq-comb' },
+            { tex: 'w_{\\text{new}}^{[i]} = \\frac{1}{12} = 0.083, \\qquad N_{\\text{eff}} = {\\color{#34d399}' + neff.toFixed(1) + '}' }
+          ]);
+        } else {
+          api.renderFormula(it ? 'Recupero da Kidnapping (α-Trick)' : 'Kidnapping Recovery (α-Trick)', [
+            { tex: 'M_{\\text{rand}} = \\alpha M = 2\\text{ explorers } (\\#11, \\#12) \\sim \\mathcal{U}(0, 10)' },
+            { tex: 'w_{\\#11} + w_{\\#12} \\longrightarrow {\\color{#34d399}' + ((cur.ws[10] + cur.ws[11]) * 100).toFixed(0) + '\\%}' }
+          ], null, 'emerald');
+        }
+        api.setDataHTML(renderParticleList(cur.xs, cur.ws, lang, t >= 50.0 ? 10 : undefined));
+      },
+
+      renderBeams: function (t, lang, api) {
+        var out = '';
+        if (t >= 20.0 && t <= 24.5) {
+          out += C.buildFlightSVG(api.getAnchor('pf-p-1'), api.getAnchor('pt-row-1'), C.invLerp(20.0, 22.8, t), 'w↑', '#ffd000', -30);
+          out += C.buildFlightSVG(api.getAnchor('pf-p-9'), api.getAnchor('pt-row-9'), C.invLerp(20.6, 23.4, t), 'w↑', '#ffd000', 24);
+        }
+        if (t >= 41.0 && t <= 45.0) {
+          out += C.buildLaserBeamSVG(api.getAnchor('pf-wheel'), api.getAnchor('pf-eq-comb'), C.invLerp(41.0, 43.0, t), '#34d399', -18);
+        }
+        if (t >= 53.5 && t <= 57.5) {
+          out += C.buildFlightSVG(api.getAnchor('pf-p-10'), api.getAnchor('pt-row-10'), C.invLerp(53.5, 56.2, t), 'α', '#34d399', -28);
+          out += C.buildFlightSVG(api.getAnchor('pf-p-11'), api.getAnchor('pt-row-11'), C.invLerp(54.2, 56.8, t), 'α', '#34d399', 22);
+        }
+        return out;
+      },
+
+      formatTooltip: function (info, lang) {
+        var it = lang === 'it';
+        return '<div style="font-size:10px;color:#94a3b8;">' + (it ? 'Particella #' : 'Particle #') + (info.r + 1) + '</div>' +
+          '<div style="font-weight:700;color:#ffd000;">' + info.val + '</div>';
+      }
+    });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initPF);
-  } else {
-    initPF();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();

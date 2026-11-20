@@ -131,6 +131,7 @@
       window.renderMathInElement(document.body, {
         delimiters: [
           { left: '$$', right: '$$', display: true },
+          { left: '\\[', right: '\\]', display: true },
           { left: '\\(', right: '\\)', display: false }
         ],
         ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
@@ -396,6 +397,7 @@
         title: 'Encoder Kinematic Shift & Gaussian Filter',
         terms: [
           { sym: 'd_A, w', label: 'Encoder Arc & Rotation', desc: 'Average wheel displacement \\((d_L+d_R)/2\\) and differential turn \\((d_R-d_L)/L\\).' },
+          { sym: '\\hat{\\varphi}', label: 'Previous Peak Heading', desc: 'Read directly from the column header where the peak sat in the previous step (e.g. \\(\\hat{\\varphi}=0.00\\text{ rad}\\)).' },
           { sym: 'd_t, \\varphi_t', label: 'Shifted Cell Coordinates', desc: 'Each grid centroid moves laterally by \\(d_A\\sin(\\hat{\\varphi})\\) and rotates by \\(w\\).' },
           { sym: '* G_{\\text{cov\\_mask}}', label: '2D Gaussian Filter Blur', desc: 'Calls <code>gaussian_filter(p_belief, cov_mask)</code> to model wheel slip uncertainty.' }
         ]
@@ -404,6 +406,7 @@
         title: 'Traslazione da Encoder & Gaussian Filter',
         terms: [
           { sym: 'd_A, w', label: 'Avanzamento & Rotazione', desc: 'Media degli encoder \\((d_L+d_R)/2\\) e sterzata differenziale \\((d_R-d_L)/L\\).' },
+          { sym: '\\hat{\\varphi}', label: 'Angolo Stima Precedente', desc: 'Si legge direttamente dall’intestazione della colonna dove si trovava il picco al passo precedente (es. \\(0.00\\text{ rad}\\)).' },
           { sym: 'd_t, \\varphi_t', label: 'Nuove Coordinate Celle', desc: 'Ogni centroide trasla lateralmente di \\(d_A\\sin(\\hat{\\varphi})\\) e ruota di \\(w\\).' },
           { sym: '* G_{\\text{cov\\_mask}}', label: 'Sfocatura Gaussian Filter', desc: 'Esegue <code>gaussian_filter(p_belief, cov_mask)</code> per modellare lo slittamento.' }
         ]
@@ -411,21 +414,23 @@
     },
     'hf-vote': {
       kicker: 'HISTOGRAM FILTER · generate_vote',
-      tex: '\\hat{t} = \\frac{p_2 - p_1}{\\|p_2 - p_1\\|},\\; \\hat{n} = \\begin{bmatrix} -t_y \\\\ t_x \\end{bmatrix}, \\quad \\varphi_i = \\arcsin(t_y), \\qquad d_i^{\\text{white/yellow}} = \\pm d_{\\text{seg}} - w_{\\text{paint}} \\mp \\frac{w_{\\text{lane}}}{2}',
+      tex: '\\hat{t} = \\frac{p_2 - p_1}{\\|p_2 - p_1\\|},\\; \\hat{n} = \\begin{bmatrix} -t_y \\\\ t_x \\end{bmatrix}, \\quad \\varphi_i = \\arcsin(t_y), \\quad d_{\\text{seg}} = \\frac{\\hat{n}\\cdot p_1 + \\hat{n}\\cdot p_2}{2}, \\quad d_i^{\\text{w/y}} = \\pm d_{\\text{seg}} - w_{\\text{paint}} \\mp \\frac{w_{\\text{lane}}}{2}',
       en: {
         title: 'Tangent/Normal Segment Voting (generate_vote)',
         terms: [
           { sym: '\\hat{t}, \\hat{n}', label: 'Unit Tangent & Normal', desc: 'Direction along ground segment \\(p_1 \\to p_2\\) and orthogonal normal vector \\([-t_y, t_x]^\\top\\).' },
-          { sym: '\\varphi_i = \\arcsin(t_y)', label: 'Segment Heading', desc: 'Lane angle extracted directly from the \\(y\\)-component of unit tangent \\(\\hat{t}\\).' },
-          { sym: 'w_{\\text{paint}}, \\frac{w_{\\text{lane}}}{2}', label: 'Tape Width & Half-Lane', desc: 'Subtracts real line thickness (<code>linewidth_white/yellow</code>) before shifting to lane center.' }
+          { sym: '\\varphi_i = \\arcsin(t_y)', label: 'Segment Heading (Column Vote)', desc: 'Lane angle extracted directly from \\(t_y\\); selects the closest column \\(\\varphi\\) in the grid.' },
+          { sym: 'd_{\\text{seg}} = \\frac{\\hat{n}\\cdot p_1 + \\hat{n}\\cdot p_2}{2}', label: 'Dot Product (90° Tape Distance)', desc: 'Projects endpoints \\(p_1, p_2\\) onto normal \\(\\hat{n}\\) to measure perpendicular distance to the tape, compensating robot tilt.' },
+          { sym: 'w_{\\text{paint}}, \\frac{w_{\\text{lane}}}{2}', label: 'Tape Width & Half-Lane (Row Vote)', desc: 'Subtracts real line thickness (<code>linewidth_white/yellow</code>) and half-lane to select the closest row \\(d\\).' }
         ]
       },
       it: {
         title: 'Voto con Versori Tangente/Normale (generate_vote)',
         terms: [
           { sym: '\\hat{t}, \\hat{n}', label: 'Versori Tangente & Normale', desc: 'Direzione unitaria del segmento \\(p_1 \\to p_2\\) e normale ortogonale \\([-t_y, t_x]^\\top\\).' },
-          { sym: '\\varphi_i = \\arcsin(t_y)', label: 'Angolo Segmento', desc: 'Inclinazione in corsia estratta dalla componente \\(y\\) del versore tangente \\(\\hat{t}\\).' },
-          { sym: 'w_{\\text{paint}}, \\frac{w_{\\text{lane}}}{2}', label: 'Spessore Vernice & Mezza Corsia', desc: 'Sottrae lo spessore reale della striscia (<code>linewidth</code>) prima di spostarsi al centro corsia.' }
+          { sym: '\\varphi_i = \\arcsin(t_y)', label: 'Angolo Segmento (Sceglie la COLONNA)', desc: 'Inclinazione in corsia estratta da \\(t_y\\); confrontata con le colonne sceglie la colonna \\(\\varphi\\) più vicina.' },
+          { sym: 'd_{\\text{seg}} = \\frac{\\hat{n}\\cdot p_1 + \\hat{n}\\cdot p_2}{2}', label: 'Prodotto Scalare (Distanza a 90°)', desc: 'Proietta \\(p_1\\) e \\(p_2\\) sulla normale \\(\\hat{n}\\) per misurare la distanza perpendicolare alla striscia compensando l’inclinazione.' },
+          { sym: 'w_{\\text{paint}}, \\frac{w_{\\text{lane}}}{2}', label: 'Vernice & Mezza Corsia (Sceglie la RIGA)', desc: 'Sottrae lo spessore reale della striscia (<code>linewidth</code>) e mezza corsia per scegliere la riga \\(d\\) più vicina.' }
         ]
       }
     },
@@ -535,7 +540,7 @@
     },
     'ekf-upd': {
       kicker: 'EXTENDED KALMAN FILTER · 5. EKF UPDATE',
-      tex: 'K_t = \\bar{P}_t H_t^{\\top} (H_t \\bar{P}_t H_t^{\\top} + R)^{-1}, \\qquad q_t = \\bar{q}_t + K_t \\operatorname{wrap}(z_t - h(\\bar{q}_t)), \\qquad P_t = \\tfrac{1}{2}(P_{\\text{new}} + P_{\\text{new}}^{\\top})',
+      tex: 'K_t = \\bar{P}_t H_t^{\\top} (H_t \\bar{P}_t H_t^{\\top} + R)^{-1}, \\quad q_t = \\bar{q}_t + K_t \\operatorname{wrap}(z_t - h(\\bar{q}_t)), \\quad P_{\\text{new}} = (I - K_t H_t)\\bar{P}_t, \\quad P_t = \\tfrac{1}{2}(P_{\\text{new}} + P_{\\text{new}}^{\\top})',
       en: {
         title: 'EKF Gain, Wrapped Update & Symmetrization',
         terms: [

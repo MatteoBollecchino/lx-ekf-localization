@@ -317,6 +317,104 @@
       });
     },
 
+    // 11b. HF: DIRAC DELTA BELIEF & histogram_prior
+    'hf-dirac': function (container, lang) {
+      return H.mountCanvasSim(container, lang, {
+        defaults: { mu: 0.00, sig: 0.06, nBins: 9 },
+        defaultPresetIdx: 0,
+        guide: {
+          it: '<strong>Cosa osservare:</strong> <code>histogram_prior</code> campiona una gaussiana continua sui centroidi discreti <code>x^i</code>: ogni freccia verticale è uno spillo di Dirac <code>w_t^i · δ(x − x^i)</code> e la somma di tutti i pesi vale sempre <code>1.00</code>.',
+          en: '<strong>What to watch:</strong> <code>histogram_prior</code> samples a continuous Gaussian at discrete bin centroids <code>x^i</code>: each vertical spike is a Dirac delta <code>w_t^i · δ(x − x^i)</code> and all weights always sum to <code>1.00</code>.'
+        },
+        legend: {
+          it: '<span class="leg-slate">■ Densità continua N(μ₀, Σ₀)</span><span class="leg-gold">■ Spilli di Dirac w_t^i · δ(x − x^i)</span>',
+          en: '<span class="leg-slate">■ Continuous PDF N(μ₀, Σ₀)</span><span class="leg-gold">■ Dirac spikes w_t^i · δ(x − x^i)</span>'
+        },
+        presets: {
+          it: [
+            { label: 'Prior Centrato (N=9)', vals: { mu: 0.00, sig: 0.06, nBins: 9 } },
+            { label: 'Griglia Fine (N=15)', vals: { mu: 0.03, sig: 0.05, nBins: 15 } }
+          ],
+          en: [
+            { label: 'Centered Prior (N=9)', vals: { mu: 0.00, sig: 0.06, nBins: 9 } },
+            { label: 'Fine Grid (N=15)', vals: { mu: 0.03, sig: 0.05, nBins: 15 } }
+          ]
+        },
+        sliders: [
+          { key: 'mu', min: -0.10, max: 0.10, step: 0.01, labelIt: 'Centro iniziale μ₀', labelEn: 'Initial center μ₀', fmt: function (v) { return H.signedFixed(v, 2) + ' m'; } },
+          { key: 'sig', min: 0.03, max: 0.12, step: 0.01, labelIt: 'Larghezza prior σ₀', labelEn: 'Prior spread σ₀', fmt: function (v) { return v.toFixed(2) + ' m'; } },
+          { key: 'nBins', min: 5, max: 17, step: 2, labelIt: 'Numero centroidi N', labelEn: 'Centroid count N', fmt: function (v) { return v.toFixed(0); } }
+        ],
+        renderEq: function (s, tFrac) {
+          var N = Math.round(s.nBins);
+          var raw = [];
+          var sum = 0;
+          for (var i = 0; i < N; i++) {
+            var xi = -0.15 + (0.30 * i) / Math.max(1, N - 1);
+            var w = H.gaussian(xi, s.mu * tFrac, s.sig);
+            raw.push(w);
+            sum += w;
+          }
+          var maxW = Math.max.apply(null, raw) / Math.max(1e-6, sum);
+          return (
+            '\\begin{aligned}' +
+            '\\operatorname{bel}(x_t) &= \\sum_{i=1}^{' + N + '} w_t^i\\,\\delta(x_t - x^i), \\qquad \\sum_{i=1}^{' + N + '} w_t^i = 1.00 \\\\[4pt]' +
+            'w_{\\max} &= {\\color{#ffd000}' + (maxW * 100).toFixed(1) + '\\%} \\quad (\\mu_0 = ' + H.signedFixed(s.mu * tFrac, 2) + '\\text{ m})' +
+            '\\end{aligned}'
+          );
+        },
+        draw: function (ctx, w, h, s, tFrac) {
+          ctx.fillStyle = '#09090c';
+          ctx.fillRect(0, 0, w, h);
+          var pad = 42;
+          var baseY = h - 38;
+          var plotH = h - 86;
+          var muNow = s.mu * tFrac;
+          var xToPx = function (x) { return pad + ((x + 0.16) / 0.32) * (w - pad * 2); };
+
+          // Continuous Gaussian envelope
+          var peakG = H.gaussian(muNow, muNow, s.sig);
+          ctx.save();
+          ctx.beginPath();
+          for (var x = -0.16; x <= 0.16; x += 0.004) {
+            var px = xToPx(x);
+            var py = baseY - (H.gaussian(x, muNow, s.sig) / peakG) * plotH * 0.85;
+            if (x === -0.16) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.55)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 4]);
+          ctx.stroke();
+          ctx.restore();
+
+          // Discrete Dirac spikes at cell centroids
+          var N = Math.round(s.nBins);
+          var raw = [], sum = 0;
+          for (var i = 0; i < N; i++) {
+            var xi = -0.15 + (0.30 * i) / Math.max(1, N - 1);
+            var wi = H.gaussian(xi, muNow, s.sig);
+            raw.push({ x: xi, w: wi });
+            sum += wi;
+          }
+          var maxW = 0.01;
+          raw.forEach(function (it) { it.w /= Math.max(1e-6, sum); if (it.w > maxW) maxW = it.w; });
+
+          ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.moveTo(pad, baseY); ctx.lineTo(w - pad, baseY); ctx.stroke();
+
+          raw.forEach(function (it) {
+            var px = xToPx(it.x);
+            var hSpike = (it.w / maxW) * plotH * 0.85 * (0.25 + 0.75 * tFrac);
+            H.drawArrow(ctx, px, baseY, px, baseY - Math.max(8, hSpike), '#ffd000', 2.6);
+            if (it.w > maxW * 0.45) {
+              H.drawPill(ctx, (it.w * 100).toFixed(0) + '%', px, baseY - hSpike - 14, '#ffd000');
+            }
+          });
+        }
+      });
+    },
+
     // 12. HF: histogram_predict (Encoder Shift & Gaussian Filter)
     'hf-predict': function (container, lang) {
       var N = 9;
@@ -342,8 +440,8 @@
         defaults: { dA: 0.35, phiDeg: 18, w: 0.25, blur: 1.15 },
         defaultPresetIdx: 0,
         guide: {
-          it: '<strong>Cosa osservare:</strong> gli encoder danno avanzamento <code>d_A</code> e rotazione <code>w</code>. Ogni cella (riquadro grigio) trasla di <code>(d_A sin(φ̂), w)</code> e poi <code>gaussian_filter(..., cov_mask)</code> sfoca la massa sulle celle vicine.',
-          en: '<strong>What to watch:</strong> wheel encoders yield forward arc <code>d_A</code> and turn <code>w</code>. Each cell (slate outline) shifts by <code>(d_A sin(φ̂), w)</code> and <code>gaussian_filter(..., cov_mask)</code> blurs mass into neighbors.'
+          it: '<strong>Cosa osservare:</strong> gli encoder danno avanzamento <code>d_A</code> e rotazione <code>w</code>. Ogni cella (riquadro grigio) trasla di <code>(d_A sin(φ_est), w)</code> e poi <code>gaussian_filter(..., cov_mask)</code> sfoca la massa sulle celle vicine.',
+          en: '<strong>What to watch:</strong> wheel encoders yield forward arc <code>d_A</code> and turn <code>w</code>. Each cell (slate outline) shifts by <code>(d_A sin(φ_est), w)</code> and <code>gaussian_filter(..., cov_mask)</code> blurs mass into neighbors.'
         },
         legend: {
           it: '<span class="leg-slate">■ Cella iniziale</span><span class="leg-gold">■ Massa traslata + gaussian_filter(cov_mask)</span>',
@@ -361,7 +459,7 @@
         },
         sliders: [
           { key: 'dA', min: 0.05, max: 0.55, step: 0.05, labelIt: 'Avanzamento d_A', labelEn: 'Encoder arc d_A', fmt: function (v) { return v.toFixed(2) + ' m'; } },
-          { key: 'phiDeg', min: -30, max: 30, step: 2, labelIt: 'Angolo stimato φ̂', labelEn: 'Estimated φ̂', fmt: function (v) { return H.signedFixed(v, 0) + '°'; } },
+          { key: 'phiDeg', min: -30, max: 30, step: 2, labelIt: 'Angolo stimato φ_est', labelEn: 'Estimated φ_est', fmt: function (v) { return H.signedFixed(v, 0) + '°'; } },
           { key: 'w', min: -0.6, max: 0.6, step: 0.05, labelIt: 'Rotazione encoder w', labelEn: 'Encoder turn w', fmt: function (v) { return H.signedFixed(v, 2) + ' rad'; } },
           { key: 'blur', min: 0.6, max: 2.3, step: 0.1, labelIt: 'Sfocatura cov_mask', labelEn: 'Blur cov_mask', fmt: function (v) { return v.toFixed(1) + ' cells'; } }
         ],
@@ -401,40 +499,45 @@
     // 13. HF: generate_vote (Tangent/Normal + Tape Width + Half-Lane)
     'hf-vote': function (container, lang) {
       return H.mountCanvasSim(container, lang, {
-        defaults: { ty: 0.28, lw: 0.04, isYellow: 1 },
+        defaults: { ty: -0.10, dSeg: 0.15, lw: 0.04, isYellow: 0 },
         defaultPresetIdx: 0,
         guide: {
-          it: '<strong>Cosa osservare:</strong> da <code>p₁ → p₂</code> calcoliamo il versore tangente <code>t̂</code> (giallo/bianco) e la normale <code>n̂</code> (blu) per <code>d_seg</code>. L’angolo è <code>φ_i = arcsin(t_y)</code>; poi sottraiamo lo spessore vernice <code>w_paint</code> e spostiamo di <code>±w_lane/2</code> verso il centro corsia.',
-          en: '<strong>What to watch:</strong> from <code>p₁ → p₂</code> we compute unit tangent <code>t̂</code> (yellow/white) and normal <code>n̂</code> (blue) for <code>d_seg</code>. Heading is <code>φ_i = arcsin(t_y)</code>; we then subtract tape width <code>w_paint</code> and shift by <code>±w_lane/2</code> to lane center.'
+          it: '<strong>Cosa osservare:</strong> da <code>p₁ → p₂</code> calcoliamo il versore tangente <code>t_hat</code> e la normale <code>n_hat</code> per <code>d_seg</code>. Sottraendo lo spessore vernice <code>w_paint</code> e mezza corsia <code>w_lane/2 = 0.11 m</code> otteniamo lo scostamento <code>d_i</code> dal centro corsia.',
+          en: '<strong>What to watch:</strong> from <code>p₁ → p₂</code> we compute unit tangent <code>t_hat</code> and normal <code>n_hat</code> for <code>d_seg</code>. Subtracting tape width <code>w_paint</code> and half lane <code>w_lane/2 = 0.11 m</code> yields lateral offset <code>d_i</code> from lane center.'
         },
         legend: {
-          it: '<span class="leg-gold">■ Tangente t̂ (p₁→p₂)</span><span class="leg-blue">■ Normale n̂ (d_seg)</span><span class="leg-coral">■ −w_paint ± w_lane/2</span>',
-          en: '<span class="leg-gold">■ Unit tangent t̂ (p₁→p₂)</span><span class="leg-blue">■ Normal n̂ (d_seg)</span><span class="leg-coral">■ −w_paint ± w_lane/2</span>'
+          it: '<span class="leg-gold">■ Tangente t_hat (p₁→p₂)</span><span class="leg-blue">■ Normale n_hat (d_seg)</span><span class="leg-coral">■ −w_paint ∓ w_lane/2</span>',
+          en: '<span class="leg-gold">■ Unit tangent t_hat (p₁→p₂)</span><span class="leg-blue">■ Normal n_hat (d_seg)</span><span class="leg-coral">■ −w_paint ∓ w_lane/2</span>'
         },
         presets: {
           it: [
-            { label: 'Segmento Giallo (+w/2)', vals: { ty: 0.28, lw: 0.04, isYellow: 1 } },
-            { label: 'Bordo Bianco (-w/2)', vals: { ty: -0.28, lw: 0.05, isYellow: 0 } }
+            { label: 'Bordo Bianco (d_i = 0.00 m)', vals: { ty: -0.10, dSeg: 0.15, lw: 0.04, isYellow: 0 } },
+            { label: 'Mezzeria Gialla (d_i = 0.00 m)', vals: { ty: 0.10, dSeg: 0.135, lw: 0.025, isYellow: 1 } }
           ],
           en: [
-            { label: 'Yellow Segment (+w/2)', vals: { ty: 0.28, lw: 0.04, isYellow: 1 } },
-            { label: 'White Border (-w/2)', vals: { ty: -0.28, lw: 0.05, isYellow: 0 } }
+            { label: 'White Border (d_i = 0.00 m)', vals: { ty: -0.10, dSeg: 0.15, lw: 0.04, isYellow: 0 } },
+            { label: 'Yellow Divider (d_i = 0.00 m)', vals: { ty: 0.10, dSeg: 0.135, lw: 0.025, isYellow: 1 } }
           ]
         },
         sliders: [
-          { key: 'ty', min: -0.50, max: 0.50, step: 0.02, labelIt: 'Componente tangente t_y', labelEn: 'Tangent component t_y', fmt: function (v) { return H.signedFixed(v, 2); } },
-          { key: 'lw', min: 0.00, max: 0.08, step: 0.01, labelIt: 'Spessore striscia w_paint', labelEn: 'Tape width w_paint', fmt: function (v) { return v.toFixed(2) + ' m'; } },
+          { key: 'ty', min: -0.45, max: 0.45, step: 0.02, labelIt: 'Componente tangente t_y', labelEn: 'Tangent component t_y', fmt: function (v) { return H.signedFixed(v, 2); } },
+          { key: 'dSeg', min: 0.08, max: 0.22, step: 0.005, labelIt: 'Distanza bordo |d_seg|', labelEn: 'Edge distance |d_seg|', fmt: function (v) { return v.toFixed(3) + ' m'; } },
+          { key: 'lw', min: 0.00, max: 0.06, step: 0.005, labelIt: 'Spessore striscia w_paint', labelEn: 'Tape width w_paint', fmt: function (v) { return v.toFixed(3) + ' m'; } },
           { key: 'isYellow', min: 0, max: 1, step: 1, labelIt: 'Colore (0=Bianco, 1=Giallo)', labelEn: 'Color (0=White, 1=Yellow)', fmt: function (v) { return v >= 0.5 ? 'Yellow' : 'White'; } }
         ],
         renderEq: function (s, tFrac) {
           var tyEff = H.clamp(s.ty * tFrac, -0.95, 0.95);
-          var phi = Math.asin(tyEff);
           var isY = s.isYellow >= 0.5;
-          var shift = (isY ? 0.11 : -0.11) * tFrac - (isY ? 1 : -1) * s.lw * tFrac;
+          var phi = (isY ? 1 : -1) * Math.asin(tyEff);
+          var dInner = s.dSeg - s.lw * tFrac;
+          var di = isY ? (0.11 - dInner) : (dInner - 0.11);
           return (
             '\\begin{aligned}' +
-            '\\varphi_i &= \\arcsin(t_y = ' + H.signedFixed(tyEff, 2) + ') = {\\color{#ffd000}' + H.radToDeg(phi).toFixed(1) + '^\\circ} \\\\[4pt]' +
-            'd_i &= \\pm d_{\\text{seg}} - w_{\\text{paint}}(' + s.lw.toFixed(2) + ') ' + (isY ? '+ \\frac{w_{\\text{lane}}}{2}' : '- \\frac{w_{\\text{lane}}}{2}') + ' \\;(' + H.signedFixed(shift, 2) + '\\text{ m})' +
+            '\\varphi_i &= ' + (isY ? '' : '-') + '\\arcsin(' + H.signedFixed(tyEff, 2) + ') = {\\color{#ffd000}' + H.signedFixed(phi, 2) + '\\text{ rad}} \\;(' + H.signedFixed(H.radToDeg(phi), 1) + '^\\circ) \\\\[4pt]' +
+            'd_i &= ' + (isY
+              ? '0.110 - (' + s.dSeg.toFixed(3) + ' - ' + (s.lw * tFrac).toFixed(3) + ')'
+              : s.dSeg.toFixed(3) + ' - ' + (s.lw * tFrac).toFixed(3) + ' - 0.110') +
+            ' = {\\color{#34d399}' + H.signedFixed(di, 3) + '\\text{ m}}' +
             '\\end{aligned}'
           );
         },
@@ -453,16 +556,17 @@
           var yEnd = oy - txEff * scale * 0.72;
           H.drawArrow(ctx, ox, oy, xEnd, yEnd, segColor, 3.0);
 
-          // Unit normal n_hat = [-t_y, t_x] drawn perpendicular to t_hat
           var nxEnd = ox - txEff * scale * 0.28;
           var nyEnd = oy - tyEff * scale * 0.28;
           H.drawArrow(ctx, ox, oy, nxEnd, nyEnd, '#60a5fa', 2.2);
-          H.drawPill(ctx, 'n̂', nxEnd - 12, nyEnd, '#60a5fa');
+          H.drawPill(ctx, 'n_hat', nxEnd - 14, nyEnd, '#60a5fa');
 
-          var laneX = ox + ((isY ? 0.11 : -0.11) - (isY ? 1 : -1) * s.lw) * tFrac * scale * 1.4;
+          var dInner = s.dSeg - s.lw * tFrac;
+          var di = isY ? (0.11 - dInner) : (dInner - 0.11);
+          var laneX = ox + (isY ? -1 : 1) * (s.dSeg - di) * tFrac * scale * 1.3;
           H.drawArrow(ctx, ox, oy - 36, laneX, oy - 36, '#e07a5f', 2.4, [4, 3]);
-          H.drawPill(ctx, (isY ? '+w/2' : '-w/2') + ' − w_paint', (ox + laneX) * 0.5, oy - 54, '#e07a5f');
-          H.drawPill(ctx, 't̂ → φ_i=' + H.radToDeg(Math.asin(tyEff)).toFixed(1) + '°', xEnd, yEnd - 16, segColor);
+          H.drawPill(ctx, 'd_i = ' + H.signedFixed(di, 2) + ' m', (ox + laneX) * 0.5, oy - 54, '#e07a5f');
+          H.drawPill(ctx, 't_hat → φ_i=' + H.signedFixed((isY ? 1 : -1) * Math.asin(tyEff), 2) + ' rad', xEnd, yEnd - 16, segColor);
         }
       });
     },
@@ -513,12 +617,12 @@
         defaults: { offset: 0.0, sharp: 1.0 },
         defaultPresetIdx: 0,
         guide: {
-          it: '<strong>Cosa osservare:</strong> in <code>histogram_update</code>, <code>np.multiply(belief, likelihood)</code> moltiplica ogni cella di <span class="leg-blue">bel̄</span> per la corrispondente cella di <span class="leg-coral">L</span> (prodotto di Hadamard <code>⊙</code>): sopravvive solo l’intersezione <span class="leg-gold">bel_post</span>.',
-          en: '<strong>What to watch:</strong> inside <code>histogram_update</code>, <code>np.multiply(belief, likelihood)</code> multiplies each cell of <span class="leg-blue">bel̄</span> by <span class="leg-coral">L</span> (Hadamard product <code>⊙</code>): only their intersection <span class="leg-gold">bel_post</span> survives.'
+          it: '<strong>Cosa osservare:</strong> in <code>histogram_update</code>, <code>np.multiply(belief, likelihood)</code> moltiplica ogni cella di <span class="leg-blue">bel_prior</span> per la corrispondente cella di <span class="leg-coral">L</span> (prodotto di Hadamard <code>⊙</code>): sopravvive solo l’intersezione <span class="leg-gold">bel_post</span>.',
+          en: '<strong>What to watch:</strong> inside <code>histogram_update</code>, <code>np.multiply(belief, likelihood)</code> multiplies each cell of <span class="leg-blue">bel_prior</span> by <span class="leg-coral">L</span> (Hadamard product <code>⊙</code>): only their intersection <span class="leg-gold">bel_post</span> survives.'
         },
         legend: {
-          it: '<span class="leg-blue">■ Prior bel̄</span><span class="leg-coral">■ Verosimiglianza L</span><span class="leg-gold">■ Posteriore bel̄ ⊙ L</span>',
-          en: '<span class="leg-blue">■ Prior bel̄</span><span class="leg-coral">■ Likelihood L</span><span class="leg-gold">■ Posterior bel̄ ⊙ L</span>'
+          it: '<span class="leg-blue">■ Prior bel_prior</span><span class="leg-coral">■ Verosimiglianza L</span><span class="leg-gold">■ Posteriore bel_prior ⊙ L</span>',
+          en: '<span class="leg-blue">■ Prior bel_prior</span><span class="leg-coral">■ Likelihood L</span><span class="leg-gold">■ Posterior bel_prior ⊙ L</span>'
         },
         presets: {
           it: [
@@ -572,7 +676,7 @@
           ctx.lineWidth = 1.8;
           ctx.strokeRect(startX + (gSize + gap) * 2 + g.bestC * cs, gy + g.bestR * cs, cs, cs);
 
-          H.drawPill(ctx, 'bel̄', startX + gSize * 0.5, gy - 14, '#60a5fa');
+          H.drawPill(ctx, 'bel_prior', startX + gSize * 0.5, gy - 14, '#60a5fa');
           H.drawPill(ctx, '⊙', startX + gSize + gap * 0.5, gy + gSize * 0.5, '#a1a1aa');
           H.drawPill(ctx, 'L', startX + gSize * 1.5 + gap, gy - 14, '#e07a5f');
           H.drawPill(ctx, '=', startX + gSize * 2 + gap * 1.5, gy + gSize * 0.5, '#a1a1aa');

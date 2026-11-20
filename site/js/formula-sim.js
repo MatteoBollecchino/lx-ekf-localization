@@ -463,8 +463,8 @@
           en: '<strong>What to watch:</strong> speed <code>v</code> decomposes into legs <span class="leg-blue">Δx = v·cos(θ)·Δt</span> and <span class="leg-coral">Δy = v·sin(θ)·Δt</span>, while the top-right dial shows how <code>wrap()</code> keeps heading inside [−180°, +180°].'
         },
         legend: {
-          it: '<span class="leg-blue">■ Δx = v·cos(θ)·Δt</span><span class="leg-coral">■ Δy = v·sin(θ)·Δt</span><span class="leg-gold">■ Posa q̄ₜ</span>',
-          en: '<span class="leg-blue">■ Δx = v·cos(θ)·Δt</span><span class="leg-coral">■ Δy = v·sin(θ)·Δt</span><span class="leg-gold">■ Pose q̄ₜ</span>'
+          it: '<span class="leg-blue">■ Δx = v·cos(θ)·Δt</span><span class="leg-coral">■ Δy = v·sin(θ)·Δt</span><span class="leg-gold">■ Posa predetta q_pred</span>',
+          en: '<span class="leg-blue">■ Δx = v·cos(θ)·Δt</span><span class="leg-coral">■ Δy = v·sin(θ)·Δt</span><span class="leg-gold">■ Predicted pose q_pred</span>'
         },
         presets: {
           it: [
@@ -618,7 +618,7 @@
           ctx.restore();
 
           drawPill(ctx, wrappedCross ? 'WRAP ±180°!' : 'wrap(θ+ωΔt)', gx, gy + gr + 18, wrappedCross ? '#e07a5f' : '#a1a1aa');
-          drawPill(ctx, 'Δt = ' + effDt.toFixed(2) + 's  |  q̄ = [' + signedFixed(dx, 2) + ', ' + signedFixed(dy, 2) + ', ' + signedFixed(radToDeg(thWrap), 0) + '°]', 12, h - 16, '#ffd000', null, 'left');
+          drawPill(ctx, 'Δt = ' + effDt.toFixed(2) + 's  |  q_pred = [' + signedFixed(dx, 2) + ', ' + signedFixed(dy, 2) + ', ' + signedFixed(radToDeg(thWrap), 0) + '°]', 12, h - 16, '#ffd000', null, 'left');
         }
       });
     },
@@ -808,8 +808,8 @@
           en: '<strong>What to watch:</strong> <span class="leg-blue">F·P·Fᵀ</span> stretches the ellipse <em>sideways</em> when heading <code>σ_θ</code> is uncertain, while <span class="leg-coral">W·Q·Wᵀ</span> elongates it <em>forward</em> along motion when wheels slip (<code>σ_v</code>).'
         },
         legend: {
-          it: '<span class="leg-slate">■ Prior P_{t-1}</span><span class="leg-blue">■ Moto FPFᵀ</span><span class="leg-gold">■ Totale P̄_t = FPFᵀ + WQWᵀ</span>',
-          en: '<span class="leg-slate">■ Prior P_{t-1}</span><span class="leg-blue">■ Dynamics FPFᵀ</span><span class="leg-gold">■ Final P̄_t = FPFᵀ + WQWᵀ</span>'
+          it: '<span class="leg-slate">■ Prior P_{t-1}</span><span class="leg-blue">■ Moto FPFᵀ</span><span class="leg-gold">■ Totale P_prior = FPFᵀ + WQWᵀ</span>',
+          en: '<span class="leg-slate">■ Prior P_{t-1}</span><span class="leg-blue">■ Dynamics FPFᵀ</span><span class="leg-gold">■ Final P_prior = FPFᵀ + WQWᵀ</span>'
         },
         presets: {
           it: [
@@ -877,7 +877,7 @@
           drawRobotMath(ctx, p0.x, p0.y, c.th, '#94a3b8', true, 1.3);
           drawRobotMath(ctx, pEnd.x, pEnd.y, c.th, '#ffd000', false, 1.38);
 
-          drawPill(ctx, 'Δt = ' + c.dt.toFixed(2) + 's  |  tr(P̄) = ' + (c.pTot.p00 + c.pTot.p11 + c.pTot.pTh).toFixed(3), 12, h - 16, '#ffd000', null, 'left');
+          drawPill(ctx, 'Δt = ' + c.dt.toFixed(2) + 's  |  tr(P_prior) = ' + (c.pTot.p00 + c.pTot.p11 + c.pTot.pTh).toFixed(3), 12, h - 16, '#ffd000', null, 'left');
         }
       });
     },
@@ -1109,12 +1109,12 @@
         defaults: { sigPrior: 0.55, sigSens: 0.25, dR: -0.45, dPhiDeg: 22 },
         defaultPresetIdx: 2,
         guide: {
-          it: '<strong>Cosa osservare:</strong> il guadagno <code>K_x</code> decide quanto spostare il robot verso la misura <span class="leg-coral">z_tag</span>; l’ellisse finale <span class="leg-gold">P_t</span> diventa sempre più stretta sia del modello (<span class="leg-blue">P̄_t</span>) che del sensore (<span class="leg-coral">R</span>).',
-          en: '<strong>What to watch:</strong> gain <code>K_x</code> arbitrates how far the estimate jumps toward <span class="leg-coral">z_tag</span>; the fused <span class="leg-gold">P_t</span> ellipse always shrinks smaller than both prior (<span class="leg-blue">P̄_t</span>) and sensor (<span class="leg-coral">R</span>).'
+          it: '<strong>Cosa osservare:</strong> il guadagno <code>K_x</code> decide quanto spostare il robot verso la misura <span class="leg-coral">z_tag</span>; l’ellisse finale <span class="leg-gold">P_t</span> diventa sempre più stretta sia del modello (<span class="leg-blue">P_prior</span>) che del sensore (<span class="leg-coral">R</span>).',
+          en: '<strong>What to watch:</strong> gain <code>K_x</code> arbitrates how far the estimate jumps toward <span class="leg-coral">z_tag</span>; the fused <span class="leg-gold">P_t</span> ellipse always shrinks smaller than both prior (<span class="leg-blue">P_prior</span>) and sensor (<span class="leg-coral">R</span>).'
         },
         legend: {
-          it: '<span class="leg-blue">■ Prior q̄ₜ, P̄ₜ</span><span class="leg-coral">■ Sensore zₜ, R</span><span class="leg-gold">■ Posteriore qₜ, Pₜ (Contratto)</span>',
-          en: '<span class="leg-blue">■ Prior q̄ₜ, P̄ₜ</span><span class="leg-coral">■ Sensor zₜ, R</span><span class="leg-gold">■ Posterior qₜ, Pₜ (Contracted)</span>'
+          it: '<span class="leg-blue">■ Prior q_pred, P_prior</span><span class="leg-coral">■ Sensore z_t, R</span><span class="leg-gold">■ Posteriore q_t, P_t (Contratto)</span>',
+          en: '<span class="leg-blue">■ Prior q_pred, P_prior</span><span class="leg-coral">■ Sensor z_t, R</span><span class="leg-gold">■ Posterior q_t, P_t (Contracted)</span>'
         },
         presets: {
           it: [
@@ -1129,7 +1129,7 @@
           ]
         },
         sliders: [
-          { key: 'sigPrior', min: 0.15, max: 0.85, step: 0.05, labelIt: 'Incertezza modello σ_P̄', labelEn: 'Prior std σ_P̄', fmt: function (v) { return v.toFixed(2) + ' m'; } },
+          { key: 'sigPrior', min: 0.15, max: 0.85, step: 0.05, labelIt: 'Incertezza modello σ_prior', labelEn: 'Prior std σ_prior', fmt: function (v) { return v.toFixed(2) + ' m'; } },
           { key: 'sigSens', min: 0.06, max: 0.75, step: 0.02, labelIt: 'Rumore AprilTag σ_R', labelEn: 'Tag noise σ_R', fmt: function (v) { return v.toFixed(2) + ' m'; } },
           { key: 'dR', min: -0.75, max: 0.75, step: 0.05, labelIt: 'Sorpresa distanza y_r', labelEn: 'Range innovation y_r', fmt: function (v) { return signedFixed(v, 2) + ' m'; } },
           { key: 'dPhiDeg', min: -55, max: 55, step: 1, labelIt: 'Sorpresa angolo y_φ', labelEn: 'Bearing innovation y_φ', fmt: function (v) { return signedFixed(v, 0) + '°'; } }
@@ -1197,7 +1197,7 @@
           drawRobotMath(ctx, curPx.x, curPx.y, curTh, '#ffd000', false, 1.38);
 
           drawPill(ctx, 'z_tag', pMeas.x, pMeas.y - 18, '#e07a5f');
-          drawPill(ctx, 'q̄', pBar.x, pBar.y + 20, '#60a5fa');
+          drawPill(ctx, 'q_pred', pBar.x, pBar.y + 20, '#60a5fa');
           drawPill(ctx, (isIt ? 'Guadagno Kₓ = ' : 'Gain Kₓ = ') + u.kxEff.toFixed(2) + '  |  σ_post < σ_prior, σ_R', 12, h - 16, '#ffd000', null, 'left');
         }
       });

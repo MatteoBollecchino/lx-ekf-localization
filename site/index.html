@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Autonomous Mobile Robot Localization — Interactive Technical Guide</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400..700;1,400..700&family=Ysabeau:wght@500;600;700;800&display=swap" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400..700;1,400..700&family=Ysabeau:wght@500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="styles.css?v=6" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous" onload="window.initPageKaTeX && window.initPageKaTeX()"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+    onload="window.initPageKaTeX && window.initPageKaTeX()"></script>
 </head>
+
 <body data-lang="en">
 
   <!-- Sticky Top Navigation Bar -->
@@ -175,11 +179,13 @@
 
         <p class="hero-lead" data-lang-block="en">
           From linear Gaussians to non-linear vision-based \(\mathrm{SE}(2)\) tracking on the Duckiebot.
-          An interactive exploration of the four canonical approximations of the recursive Bayes filter: Kalman Filter, Particle Filter, Histogram Grid, and Extended Kalman Filter.
+          An interactive exploration of the four canonical approximations of the recursive Bayes filter: Kalman Filter,
+          Particle Filter, Histogram Grid, and Extended Kalman Filter.
         </p>
         <p class="hero-lead" data-lang-block="it">
           Dalle gaussiane lineari al tracciamento visivo non lineare \(\mathrm{SE}(2)\) su Duckiebot.
-          Un percorso interattivo attraverso le quattro approssimazioni canoniche del filtro di Bayes ricorsivo: Filtro di Kalman, Filtro a Particelle, Griglia ad Istogramma e Kalman Esteso.
+          Un percorso interattivo attraverso le quattro approssimazioni canoniche del filtro di Bayes ricorsivo: Filtro
+          di Kalman, Filtro a Particelle, Griglia ad Istogramma e Kalman Esteso.
         </p>
 
         <div class="meta-strip">
@@ -198,10 +204,16 @@
         </div>
 
         <p class="prose" data-lang-block="en">
-          Autonomous mobile robots cannot directly observe their true state vector \(x_t\). Instead, onboard embedded computers must reconstruct a continuous probability distribution, called the <strong>belief</strong> \(\operatorname{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})\), by fusing two imperfect, complementary streams of telemetry:
+          Autonomous mobile robots cannot directly observe their true state vector \(x_t\). Instead, onboard embedded
+          computers must reconstruct a continuous probability distribution, called the <strong>belief</strong>
+          \(\operatorname{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})\), by fusing two imperfect, complementary streams of
+          telemetry:
         </p>
         <p class="prose" data-lang-block="it">
-          Un robot mobile autonomo non può osservare direttamente il proprio vettore di stato reale \(x_t\). L'elettronica di bordo deve invece ricostruire una distribuzione di probabilità, chiamata <strong>credenza</strong> \(\operatorname{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})\), fondendo due flussi imperfetti ma complementari:
+          Un robot mobile autonomo non può osservare direttamente il proprio vettore di stato reale \(x_t\).
+          L'elettronica di bordo deve invece ricostruire una distribuzione di probabilità, chiamata
+          <strong>credenza</strong> \(\operatorname{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})\), fondendo due flussi
+          imperfetti ma complementari:
         </p>
 
         <div class="split-2">
@@ -211,10 +223,12 @@
               <span data-lang-block="it">1. Odometria &amp; Controllo (\(u_t\)) &rarr; <span>Deriva</span></span>
             </h4>
             <p data-lang-block="en">
-              Wheel encoders and IMU increments yield locally smooth motion updates at 50–100 Hz, yet tire slip, uneven floors, and discrete integration trigger <strong>unbounded cumulative drift</strong> over distance.
+              Wheel encoders and IMU increments yield locally smooth motion updates at 50–100 Hz, yet tire slip, uneven
+              floors, and discrete integration trigger <strong>unbounded cumulative drift</strong> over distance.
             </p>
             <p data-lang-block="it">
-              Encoder sulle ruote e IMU forniscono stime di moto fluide ad alta frequenza (50–100 Hz), ma slittamenti e discrepanze meccaniche generano una <strong>deriva cumulativa illimitata</strong> nel tempo.
+              Encoder sulle ruote e IMU forniscono stime di moto fluide ad alta frequenza (50–100 Hz), ma slittamenti e
+              discrepanze meccaniche generano una <strong>deriva cumulativa illimitata</strong> nel tempo.
             </p>
           </div>
           <div class="note-panel accent">
@@ -223,10 +237,13 @@
               <span data-lang-block="it">2. Sensori Esterocettivi (\(z_t\)) &rarr; <span>Rumore / Jitter</span></span>
             </h4>
             <p data-lang-block="en">
-              Cameras, LiDAR, or AprilTag detectors measure world references with <strong>zero long-term drift</strong>, but arrive slower (10–15 Hz), stall under occlusion, and carry high-frequency Gaussian jitter or outliers.
+              Cameras, LiDAR, or AprilTag detectors measure world references with <strong>zero long-term drift</strong>,
+              but arrive slower (10–15 Hz), stall under occlusion, and carry high-frequency Gaussian jitter or outliers.
             </p>
             <p data-lang-block="it">
-              Telecamere, LiDAR o AprilTag ancorano il robot al mondo con <strong>deriva nulla nel lungo periodo</strong>, ma operano a bassa frequenza (10–15 Hz), falliscono per occlusioni e soffrono di rumore istantaneo (jitter).
+              Telecamere, LiDAR o AprilTag ancorano il robot al mondo con <strong>deriva nulla nel lungo
+                periodo</strong>, ma operano a bassa frequenza (10–15 Hz), falliscono per occlusioni e soffrono di
+              rumore istantaneo (jitter).
             </p>
           </div>
         </div>
@@ -237,10 +254,16 @@
         </h3>
 
         <p class="prose" data-lang-block="en">
-          Assuming the <strong>Markov property</strong> (future states depend only on present state and control, never on earlier history), optimal localization alternates forever between <em>Prediction</em> (Chapman–Kolmogorov integral) and <em>Measurement Update</em> (Bayes' rule). Before looking at the math, understand <strong>why</strong> the two steps use two completely different operations:
+          Assuming the <strong>Markov property</strong> (future states depend only on present state and control, never
+          on earlier history), optimal localization alternates forever between <em>Prediction</em> (Chapman–Kolmogorov
+          integral) and <em>Measurement Update</em> (Bayes' rule). Before looking at the math, understand
+          <strong>why</strong> the two steps use two completely different operations:
         </p>
         <p class="prose" data-lang-block="it">
-          Assumendo la <strong>proprietà di Markov</strong> (il futuro dipende solo dallo stato attuale e dal comando, non dalla storia remota), la localizzazione ottima alterna all'infinito <em>Predizione</em> (integrale di Chapman–Kolmogorov) e <em>Aggiornamento</em> (regola di Bayes). Prima di guardare i simboli, capiamo <strong>il perché logico</strong> delle due operazioni:
+          Assumendo la <strong>proprietà di Markov</strong> (il futuro dipende solo dallo stato attuale e dal comando,
+          non dalla storia remota), la localizzazione ottima alterna all'infinito <em>Predizione</em> (integrale di
+          Chapman–Kolmogorov) e <em>Aggiornamento</em> (regola di Bayes). Prima di guardare i simboli, capiamo
+          <strong>il perché logico</strong> delle due operazioni:
         </p>
 
         <div class="split-2">
@@ -250,10 +273,18 @@
               <span data-lang-block="it">Perché la Predizione è un Integrale (\(\int\))</span>
             </h4>
             <p data-lang-block="en">
-              Because we did not know for sure where the robot was at step \(t-1\), we cannot move just a single point. To find the probability of standing at \(x_t\) now, we must <strong>sum over every possible starting position</strong> \(x_{t-1}\), multiplying how likely we were at \(x_{t-1}\) by the chance that command \(u_t\) carried us from \(x_{t-1}\) to \(x_t\). Summing noisy possibilities always <strong>spreads and flattens</strong> certainty.
+              Because we did not know for sure where the robot was at step \(t-1\), we cannot move just a single point.
+              To find the probability of standing at \(x_t\) now, we must <strong>sum over every possible starting
+                position</strong> \(x_{t-1}\), multiplying how likely we were at \(x_{t-1}\) by the chance that command
+              \(u_t\) carried us from \(x_{t-1}\) to \(x_t\). Summing noisy possibilities always <strong>spreads and
+                flattens</strong> certainty.
             </p>
             <p data-lang-block="it">
-              Non sapendo con certezza assoluta dove si trovasse il robot al passo \(t-1\), non possiamo spostare un solo punto. Per sapere quanto è probabile trovarsi oggi in \(x_t\), dobbiamo <strong>sommare su tutte le possibili posizioni di partenza</strong> \(x_{t-1}\), moltiplicando la probabilità di essere partiti da lì per la probabilità che il comando \(u_t\) ci abbia portati in \(x_t\). Sommare movimenti incerti <strong>spalma e allarga sempre l'incertezza</strong>.
+              Non sapendo con certezza assoluta dove si trovasse il robot al passo \(t-1\), non possiamo spostare un
+              solo punto. Per sapere quanto è probabile trovarsi oggi in \(x_t\), dobbiamo <strong>sommare su tutte le
+                possibili posizioni di partenza</strong> \(x_{t-1}\), moltiplicando la probabilità di essere partiti da
+              lì per la probabilità che il comando \(u_t\) ci abbia portati in \(x_t\). Sommare movimenti incerti
+              <strong>spalma e allarga sempre l'incertezza</strong>.
             </p>
           </div>
           <div class="note-panel accent">
@@ -262,21 +293,31 @@
               <span data-lang-block="it">Perché l'Update è una Moltiplicazione (\(\times\))</span>
             </h4>
             <p data-lang-block="en">
-              When a sensor reads \(z_t\), it acts as a <strong>compatibility sieve</strong>: for every candidate position \(x_t\), we evaluate how plausible it would be to observe \(z_t\) from there (\(p(z_t \mid x_t)\)). Multiplying predicted belief \(\times\) sensor likelihood zeroes out poses where either source disagrees and amplifies poses where <strong>both motion and sensor agree</strong>. Finally \(\eta\) rescales the surviving area back to \(100\%\).
+              When a sensor reads \(z_t\), it acts as a <strong>compatibility sieve</strong>: for every candidate
+              position \(x_t\), we evaluate how plausible it would be to observe \(z_t\) from there (\(p(z_t \mid
+              x_t)\)). Multiplying predicted belief \(\times\) sensor likelihood zeroes out poses where either source
+              disagrees and amplifies poses where <strong>both motion and sensor agree</strong>. Finally \(\eta\)
+              rescales the surviving area back to \(100\%\).
             </p>
             <p data-lang-block="it">
-              Quando il sensore legge \(z_t\), agisce come un <strong>setaccio di compatibilità</strong>: per ogni posizione candidata \(x_t\) valutiamo quanto sarebbe plausibile osservare \(z_t\) trovandosi lì (\(p(z_t \mid x_t)\)). Moltiplicando la credenza predetta per la verosimiglianza del sensore si azzerano le zone incompatibili e si amplificano solo quelle in cui <strong>moto e sensore sono d'accordo</strong>. Infine \(\eta\) riporta l'area totale al \(100\%\).
+              Quando il sensore legge \(z_t\), agisce come un <strong>setaccio di compatibilità</strong>: per ogni
+              posizione candidata \(x_t\) valutiamo quanto sarebbe plausibile osservare \(z_t\) trovandosi lì (\(p(z_t
+              \mid x_t)\)). Moltiplicando la credenza predetta per la verosimiglianza del sensore si azzerano le zone
+              incompatibili e si amplificano solo quelle in cui <strong>moto e sensore sono d'accordo</strong>. Infine
+              \(\eta\) riporta l'area totale al \(100\%\).
             </p>
           </div>
         </div>
 
         <div class="math-display">
           <div class="math-eq-row wide" data-eq-explain="bayes-predict">
-            <div class="math-eq-col">\(\displaystyle \overline{\operatorname{bel}}(x_t) = \int {\color{#ffd000} p(x_t \mid u_t, x_{t-1})}\,\operatorname{bel}(x_{t-1})\,dx_{t-1}\)</div>
+            <div class="math-eq-col">\(\displaystyle \overline{\operatorname{bel}}(x_t) = \int {\color{#ffd000} p(x_t
+              \mid u_t, x_{t-1})}\,\operatorname{bel}(x_{t-1})\,dx_{t-1}\)</div>
             <div class="math-eq-tag">(Predict Step)</div>
           </div>
           <div class="math-eq-row wide" data-eq-explain="bayes-update">
-            <div class="math-eq-col">\(\displaystyle \operatorname{bel}(x_t) = \eta\,{\color{#e07a5f} p(z_t \mid x_t)}\,\overline{\operatorname{bel}}(x_t)\)</div>
+            <div class="math-eq-col">\(\displaystyle \operatorname{bel}(x_t) = \eta\,{\color{#e07a5f} p(z_t \mid
+              x_t)}\,\overline{\operatorname{bel}}(x_t)\)</div>
             <div class="math-eq-tag">(Update Step)</div>
           </div>
         </div>
@@ -284,33 +325,49 @@
         <div class="eq-breakdown">
           <div class="eq-term slate">
             <div class="eq-term-sym">\(\overline{\operatorname{bel}}(x_t)\)</div>
-            <div class="eq-term-desc" data-lang-block="en"><strong>Predicted Belief (Prior):</strong> where the robot thinks it is after executing \(u_t\), <em>before</em> seeing the new sensor reading.</div>
-            <div class="eq-term-desc" data-lang-block="it"><strong>Credenza Predetta (Priori):</strong> dove il robot stima di trovarsi dopo il comando \(u_t\), <em>prima</em> di leggere il nuovo sensore.</div>
+            <div class="eq-term-desc" data-lang-block="en"><strong>Predicted Belief (Prior):</strong> where the robot
+              thinks it is after executing \(u_t\), <em>before</em> seeing the new sensor reading.</div>
+            <div class="eq-term-desc" data-lang-block="it"><strong>Credenza Predetta (Priori):</strong> dove il robot
+              stima di trovarsi dopo il comando \(u_t\), <em>prima</em> di leggere il nuovo sensore.</div>
           </div>
           <div class="eq-term gold">
             <div class="eq-term-sym">\({\color{#ffd000} p(x_t \mid u_t, x_{t-1})}\)</div>
-            <div class="eq-term-desc" data-lang-block="en"><strong>Motion Model:</strong> probability of reaching \(x_t\) if the robot was at \(x_{t-1}\) and applied command \(u_t\) (encodes wheel slip &amp; noise).</div>
-            <div class="eq-term-desc" data-lang-block="it"><strong>Modello di Moto:</strong> probabilità di arrivare in \(x_t\) partendo da \(x_{t-1}\) con il comando \(u_t\) (include slittamenti e rumore).</div>
+            <div class="eq-term-desc" data-lang-block="en"><strong>Motion Model:</strong> probability of reaching
+              \(x_t\) if the robot was at \(x_{t-1}\) and applied command \(u_t\) (encodes wheel slip &amp; noise).
+            </div>
+            <div class="eq-term-desc" data-lang-block="it"><strong>Modello di Moto:</strong> probabilità di arrivare in
+              \(x_t\) partendo da \(x_{t-1}\) con il comando \(u_t\) (include slittamenti e rumore).</div>
           </div>
           <div class="eq-term">
             <div class="eq-term-sym">\(\int \cdots\,\operatorname{bel}(x_{t-1})\,dx_{t-1}\)</div>
-            <div class="eq-term-desc" data-lang-block="en"><strong>Total Probability Integral:</strong> sums contributions from <em>every</em> possible previous pose \(x_{t-1}\), weighted by how likely it was.</div>
-            <div class="eq-term-desc" data-lang-block="it"><strong>Integrale di Probabilità Totale:</strong> somma i contributi di <em>ogni</em> possibile posa precedente \(x_{t-1}\), pesati per la loro credenza passata.</div>
+            <div class="eq-term-desc" data-lang-block="en"><strong>Total Probability Integral:</strong> sums
+              contributions from <em>every</em> possible previous pose \(x_{t-1}\), weighted by how likely it was.</div>
+            <div class="eq-term-desc" data-lang-block="it"><strong>Integrale di Probabilità Totale:</strong> somma i
+              contributi di <em>ogni</em> possibile posa precedente \(x_{t-1}\), pesati per la loro credenza passata.
+            </div>
           </div>
           <div class="eq-term sensor">
             <div class="eq-term-sym">\({\color{#e07a5f} p(z_t \mid x_t)}\)</div>
-            <div class="eq-term-desc" data-lang-block="en"><strong>Sensor Likelihood:</strong> how consistent the actual measurement \(z_t\) (camera, LiDAR, AprilTag) is with being at candidate pose \(x_t\).</div>
-            <div class="eq-term-desc" data-lang-block="it"><strong>Verosimiglianza del Sensore:</strong> quanto la misura \(z_t\) (camera, LiDAR, AprilTag) è compatibile con l'ipotesi di trovarsi in \(x_t\).</div>
+            <div class="eq-term-desc" data-lang-block="en"><strong>Sensor Likelihood:</strong> how consistent the actual
+              measurement \(z_t\) (camera, LiDAR, AprilTag) is with being at candidate pose \(x_t\).</div>
+            <div class="eq-term-desc" data-lang-block="it"><strong>Verosimiglianza del Sensore:</strong> quanto la
+              misura \(z_t\) (camera, LiDAR, AprilTag) è compatibile con l'ipotesi di trovarsi in \(x_t\).</div>
           </div>
           <div class="eq-term">
             <div class="eq-term-sym">\(\eta\)</div>
-            <div class="eq-term-desc" data-lang-block="en"><strong>Normalizer:</strong> scaling factor \(\eta = \left(\int p(z_t \mid x_t)\,\overline{\operatorname{bel}}(x_t)\,dx_t\right)^{-1}\) ensuring total probability sums to \(1\).</div>
-            <div class="eq-term-desc" data-lang-block="it"><strong>Normalizzatore:</strong> fattore \(\eta = \left(\int p(z_t \mid x_t)\,\overline{\operatorname{bel}}(x_t)\,dx_t\right)^{-1}\) che riporta l'integrale della distribuzione a \(1\).</div>
+            <div class="eq-term-desc" data-lang-block="en"><strong>Normalizer:</strong> scaling factor \(\eta =
+              \left(\int p(z_t \mid x_t)\,\overline{\operatorname{bel}}(x_t)\,dx_t\right)^{-1}\) ensuring total
+              probability sums to \(1\).</div>
+            <div class="eq-term-desc" data-lang-block="it"><strong>Normalizzatore:</strong> fattore \(\eta = \left(\int
+              p(z_t \mid x_t)\,\overline{\operatorname{bel}}(x_t)\,dx_t\right)^{-1}\) che riporta l'integrale della
+              distribuzione a \(1\).</div>
           </div>
           <div class="eq-term gold">
             <div class="eq-term-sym">\(\operatorname{bel}(x_t)\)</div>
-            <div class="eq-term-desc" data-lang-block="en"><strong>Posterior Belief:</strong> final fused pose distribution at time \(t\), ready to become \(\operatorname{bel}(x_{t-1})\) in the next cycle.</div>
-            <div class="eq-term-desc" data-lang-block="it"><strong>Credenza a Posteriori:</strong> stima finale fusa al passo \(t\), pronta a diventare \(\operatorname{bel}(x_{t-1})\) nel ciclo successivo.</div>
+            <div class="eq-term-desc" data-lang-block="en"><strong>Posterior Belief:</strong> final fused pose
+              distribution at time \(t\), ready to become \(\operatorname{bel}(x_{t-1})\) in the next cycle.</div>
+            <div class="eq-term-desc" data-lang-block="it"><strong>Credenza a Posteriori:</strong> stima finale fusa al
+              passo \(t\), pronta a diventare \(\operatorname{bel}(x_{t-1})\) nel ciclo successivo.</div>
           </div>
         </div>
 
@@ -320,15 +377,23 @@
             <span data-lang-block="it">Perché il Filtro Esatto è Intrattabile</span>
           </div>
           <p data-lang-block="en">
-            Integrating across a continuous multi-dimensional state space \(x_t \in \mathbb{R}^n\) has no closed-form solution in general non-linear worlds. Every practical robotics filter is an architectural approximation of these two lines: assume linearity (<strong>KF</strong>), sample randomly (<strong>PF</strong>), discretize space into bins (<strong>HF</strong>), or linearize tangentially at each step (<strong>EKF</strong>).
+            Integrating across a continuous multi-dimensional state space \(x_t \in \mathbb{R}^n\) has no closed-form
+            solution in general non-linear worlds. Every practical robotics filter is an architectural approximation of
+            these two lines: assume linearity (<strong>KF</strong>), sample randomly (<strong>PF</strong>), discretize
+            space into bins (<strong>HF</strong>), or linearize tangentially at each step (<strong>EKF</strong>).
           </p>
           <p data-lang-block="it">
-            Calcolare quell'integrale su uno spazio continuo \(x_t \in \mathbb{R}^n\) non ammette soluzioni analitiche in ambienti reali non lineari. I quattro filtri di questo modulo rappresentano le quattro grandi strategie d'approssimazione: ipotesi lineari gaussiane (<strong>KF</strong>), campionamento stocastico (<strong>PF</strong>), discretizzazione su griglia (<strong>HF</strong>) o linearizzazione locale ai primi ordini (<strong>EKF</strong>).
+            Calcolare quell'integrale su uno spazio continuo \(x_t \in \mathbb{R}^n\) non ammette soluzioni analitiche
+            in ambienti reali non lineari. I quattro filtri di questo modulo rappresentano le quattro grandi strategie
+            d'approssimazione: ipotesi lineari gaussiane (<strong>KF</strong>), campionamento stocastico
+            (<strong>PF</strong>), discretizzazione su griglia (<strong>HF</strong>) o linearizzazione locale ai primi
+            ordini (<strong>EKF</strong>).
           </p>
         </div>
 
         <div class="figure-box">
-          <svg viewBox="0 0 760 175" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bayes filter recursive loop">
+          <svg viewBox="0 0 760 175" xmlns="http://www.w3.org/2000/svg" role="img"
+            aria-label="Bayes filter recursive loop">
             <defs>
               <marker id="arr-slate" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
                 <polygon points="0 0, 7 3.5, 0 7" fill="#94a3b8" />
@@ -340,50 +405,65 @@
                 <polygon points="0 0, 7 3.5, 0 7" fill="#e07a5f" />
               </marker>
             </defs>
-            <rect x="20" y="54" width="145" height="58" rx="8" fill="#17171b" stroke="rgba(255,208,0,0.45)" stroke-width="1.5" />
+            <rect x="20" y="54" width="145" height="58" rx="8" fill="#17171b" stroke="rgba(255,208,0,0.45)"
+              stroke-width="1.5" />
             <foreignObject x="24" y="60" width="137" height="24">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#ffd000;">\(\operatorname{bel}(x_{t-1})\)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#ffd000;">
+                \(\operatorname{bel}(x_{t-1})\)</div>
             </foreignObject>
-            <text x="92" y="99" text-anchor="middle" fill="#a1a1aa" font-family="Inter, sans-serif" font-size="11">Prior Belief</text>
+            <text x="92" y="99" text-anchor="middle" fill="#a1a1aa" font-family="Inter, sans-serif" font-size="11">Prior
+              Belief</text>
 
             <rect x="255" y="42" width="190" height="82" rx="8" fill="#121215" stroke="#94a3b8" stroke-width="1.4" />
             <foreignObject x="260" y="48" width="180" height="24">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#f4f4f6;font-weight:700;">PREDICT (\(+u_t,\, +Q\))</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#f4f4f6;font-weight:700;">PREDICT
+                (\(+u_t,\, +Q\))</div>
             </foreignObject>
-            <text x="350" y="88" text-anchor="middle" fill="#94a3b8" font-family="Inter, sans-serif" font-size="11">Shift Mean &amp; Inflate Uncertainty</text>
+            <text x="350" y="88" text-anchor="middle" fill="#94a3b8" font-family="Inter, sans-serif"
+              font-size="11">Shift Mean &amp; Inflate Uncertainty</text>
             <foreignObject x="260" y="96" width="180" height="22">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#71717a;">\(\rightarrow \overline{\operatorname{bel}}(x_t)\)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#71717a;">\(\rightarrow
+                \overline{\operatorname{bel}}(x_t)\)</div>
             </foreignObject>
 
             <rect x="535" y="42" width="200" height="82" rx="8" fill="#121215" stroke="#ffd000" stroke-width="1.6" />
             <foreignObject x="540" y="48" width="190" height="24">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#ffd000;font-weight:700;">UPDATE (\(z_t,\, K\))</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#ffd000;font-weight:700;">UPDATE
+                (\(z_t,\, K\))</div>
             </foreignObject>
-            <text x="635" y="88" text-anchor="middle" fill="#a1a1aa" font-family="Inter, sans-serif" font-size="11">Fuse Likelihood &amp; Normalize</text>
+            <text x="635" y="88" text-anchor="middle" fill="#a1a1aa" font-family="Inter, sans-serif" font-size="11">Fuse
+              Likelihood &amp; Normalize</text>
             <foreignObject x="540" y="96" width="190" height="22">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#ffd000;">\(\rightarrow \operatorname{bel}(x_t)\)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#ffd000;">\(\rightarrow
+                \operatorname{bel}(x_t)\)</div>
             </foreignObject>
 
             <foreignObject x="245" y="2" width="210" height="20">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#94a3b8;">\(u_t\)&nbsp;(Encoders / Control)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#94a3b8;">\(u_t\)&nbsp;(Encoders /
+                Control)</div>
             </foreignObject>
             <line x1="350" y1="22" x2="350" y2="40" stroke="#94a3b8" stroke-width="1.4" marker-end="url(#arr-slate)" />
 
             <foreignObject x="530" y="2" width="210" height="20">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#e07a5f;">\(z_t\)&nbsp;(Camera / AprilTags)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#e07a5f;">\(z_t\)&nbsp;(Camera /
+                AprilTags)</div>
             </foreignObject>
             <line x1="635" y1="22" x2="635" y2="40" stroke="#e07a5f" stroke-width="1.4" marker-end="url(#arr-sen)" />
 
             <line x1="165" y1="83" x2="251" y2="83" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr-slate)" />
             <line x1="445" y1="83" x2="531" y2="83" stroke="#ffd000" stroke-width="1.5" marker-end="url(#arr-gold)" />
 
-            <path d="M 635 124 L 635 154 L 92 154 L 92 115" fill="none" stroke="rgba(255,208,0,0.45)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr-gold)" />
+            <path d="M 635 124 L 635 154 L 92 154 L 92 115" fill="none" stroke="rgba(255,208,0,0.45)" stroke-width="1.4"
+              stroke-dasharray="5 4" marker-end="url(#arr-gold)" />
             <foreignObject x="234" y="135" width="260" height="20">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#ffd000;">Recursive Feedback&nbsp;\(t \rightarrow t+1\)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#ffd000;">Recursive
+                Feedback&nbsp;\(t \rightarrow t+1\)</div>
             </foreignObject>
           </svg>
-          <div class="figure-caption" data-lang-block="en">Fig. 0.1 — Recursive Bayes localization loop: high-rate motion widens belief; exteroceptive measurements sharpen and center it.</div>
-          <div class="figure-caption" data-lang-block="it">Fig. 0.1 — Ciclo ricorsivo di Bayes: la predizione espande la varianza; l'osservazione concentra la credenza attorno al robot.</div>
+          <div class="figure-caption" data-lang-block="en">Fig. 0.1 — Recursive Bayes localization loop: high-rate
+            motion widens belief; exteroceptive measurements sharpen and center it.</div>
+          <div class="figure-caption" data-lang-block="it">Fig. 0.1 — Ciclo ricorsivo di Bayes: la predizione espande la
+            varianza; l'osservazione concentra la credenza attorno al robot.</div>
         </div>
       </section>
 
@@ -396,10 +476,16 @@
         </div>
 
         <p class="prose" data-lang-block="en">
-          Developed by Rudolf E. Kálmán (1960), the Linear Kalman Filter delivers the analytically <strong>exact closed-form optimum</strong> for systems where dynamics are linear and uncertainty is Gaussian. Because multiplying or adding Gaussians always produces another Gaussian, the infinite probability integral reduces to algebraic matrix multiplications in constant \(\mathcal{O}(1)\) <strong>time and memory</strong>.
+          Developed by Rudolf E. Kálmán (1960), the Linear Kalman Filter delivers the analytically <strong>exact
+            closed-form optimum</strong> for systems where dynamics are linear and uncertainty is Gaussian. Because
+          multiplying or adding Gaussians always produces another Gaussian, the infinite probability integral reduces to
+          algebraic matrix multiplications in constant \(\mathcal{O}(1)\) <strong>time and memory</strong>.
         </p>
         <p class="prose" data-lang-block="it">
-          Introdotto da Rudolf E. Kálmán nel 1960, il Filtro di Kalman Lineare fornisce la soluzione analitica <strong>esatta in forma chiusa</strong> quando dinamica e misure sono lineari con rumori gaussiani. Grazie alla proprietà di chiusura gaussiana sotto somma e prodotto, l'integrale bayesiano collassa in operazioni matriciali di complessità \(\mathcal{O}(1)\) <strong>in tempo e memoria</strong>.
+          Introdotto da Rudolf E. Kálmán nel 1960, il Filtro di Kalman Lineare fornisce la soluzione analitica
+          <strong>esatta in forma chiusa</strong> quando dinamica e misure sono lineari con rumori gaussiani. Grazie
+          alla proprietà di chiusura gaussiana sotto somma e prodotto, l'integrale bayesiano collassa in operazioni
+          matriciali di complessità \(\mathcal{O}(1)\) <strong>in tempo e memoria</strong>.
         </p>
 
         <div class="callout">
@@ -408,10 +494,16 @@
             <span data-lang-block="it">Intuizione — Il Camminatore Bendato e l'Osservatore Ubriaco</span>
           </div>
           <p data-lang-block="en">
-            Imagine counting your own footsteps while blindfolded along a hallway: you know roughly how far 10 steps carry you, but small slips compound uncertainty with every stride. Periodically a tipsy friend shouts out your distance from the door, noisy on any single shout, yet free of long-term drift. Combining how far you walked with the shout weighted by relative confidence always beats either clue alone.
+            Imagine counting your own footsteps while blindfolded along a hallway: you know roughly how far 10 steps
+            carry you, but small slips compound uncertainty with every stride. Periodically a tipsy friend shouts out
+            your distance from the door, noisy on any single shout, yet free of long-term drift. Combining how far you
+            walked with the shout weighted by relative confidence always beats either clue alone.
           </p>
           <p data-lang-block="it">
-            Immagina di camminare bendato lungo un corridoio contando i passi: conosci il tuo passo medio ma piccoli errori si accumulano a ogni metro. Ogni tanto un amico alticcio ti urla la distanza dalla porta: impreciso sul singolo grido, ma privo di deriva cumulativa. Pesare il modello di moto con la misura in base all'affidabilità relativa batte sempre ciascuna fonte da sola.
+            Immagina di camminare bendato lungo un corridoio contando i passi: conosci il tuo passo medio ma piccoli
+            errori si accumulano a ogni metro. Ogni tanto un amico alticcio ti urla la distanza dalla porta: impreciso
+            sul singolo grido, ma privo di deriva cumulativa. Pesare il modello di moto con la misura in base
+            all'affidabilità relativa batte sempre ciascuna fonte da sola.
           </p>
         </div>
 
@@ -421,20 +513,32 @@
         </h3>
 
         <p class="prose" data-lang-block="en">
-          How does Kálmán turn the impossible Bayes integral into fast matrix algebra? By noticing that a <strong>Gaussian bell curve</strong> \(\mathcal{N}(\mu, \Sigma)\) is completely described by just its center \(\mu\) and spread \(\Sigma\), and if a Gaussian passes through a <strong>linear equation</strong>, the output is still an exact Gaussian! Thus, if we enforce three rules, the filter never has to integrate a curve again:
+          How does Kálmán turn the impossible Bayes integral into fast matrix algebra? By noticing that a
+          <strong>Gaussian bell curve</strong> \(\mathcal{N}(\mu, \Sigma)\) is completely described by just its center
+          \(\mu\) and spread \(\Sigma\), and if a Gaussian passes through a <strong>linear equation</strong>, the output
+          is still an exact Gaussian! Thus, if we enforce three rules, the filter never has to integrate a curve again:
         </p>
         <ol class="clean-list" data-lang-block="en">
-          <li><strong>Linear motion</strong> with matrix \(A\) (natural state evolution), matrix \(B\) (motor command mapping), and slip noise \(w_t \sim \mathcal{N}(0, Q)\).</li>
-          <li><strong>Linear sensor</strong> with matrix \(H\) (converting state units into sensor units) and measurement noise \(n_t \sim \mathcal{N}(0, R)\).</li>
-          <li><strong>A Gaussian starting belief</strong> \(\operatorname{bel}(x_0) = \mathcal{N}(\mu_0, \Sigma_0)\).</li>
+          <li><strong>Linear motion</strong> with matrix \(A\) (natural state evolution), matrix \(B\) (motor command
+            mapping), and slip noise \(w_t \sim \mathcal{N}(0, Q)\).</li>
+          <li><strong>Linear sensor</strong> with matrix \(H\) (converting state units into sensor units) and
+            measurement noise \(n_t \sim \mathcal{N}(0, R)\).</li>
+          <li><strong>A Gaussian starting belief</strong> \(\operatorname{bel}(x_0) = \mathcal{N}(\mu_0, \Sigma_0)\).
+          </li>
         </ol>
 
         <p class="prose" data-lang-block="it">
-          Come fa Kálmán a trasformare l'integrale impossibile di Bayes in semplici moltiplicazioni tra matrici? Sfruttando il fatto che una <strong>campana gaussiana</strong> \(\mathcal{N}(\mu, \Sigma)\) è descritta interamente da due soli parametri (il centro \(\mu\) e la larghezza \(\Sigma\)) e, se attraversa un'<strong>equazione lineare</strong>, resta sempre una gaussiana esatta! Imponendo quindi tre regole, tutto il filtro si riduce ad aggiornare \(\mu\) e \(\Sigma\):
+          Come fa Kálmán a trasformare l'integrale impossibile di Bayes in semplici moltiplicazioni tra matrici?
+          Sfruttando il fatto che una <strong>campana gaussiana</strong> \(\mathcal{N}(\mu, \Sigma)\) è descritta
+          interamente da due soli parametri (il centro \(\mu\) e la larghezza \(\Sigma\)) e, se attraversa
+          un'<strong>equazione lineare</strong>, resta sempre una gaussiana esatta! Imponendo quindi tre regole, tutto
+          il filtro si riduce ad aggiornare \(\mu\) e \(\Sigma\):
         </p>
         <ol class="clean-list" data-lang-block="it">
-          <li><strong>Moto lineare</strong> con matrice \(A\) (evoluzione naturale dello stato), matrice \(B\) (effetto dei motori) e slittamento \(w_t \sim \mathcal{N}(0, Q)\).</li>
-          <li><strong>Sensore lineare</strong> con matrice \(H\) (traduttore dallo stato alle unità del sensore) e rumore \(n_t \sim \mathcal{N}(0, R)\).</li>
+          <li><strong>Moto lineare</strong> con matrice \(A\) (evoluzione naturale dello stato), matrice \(B\) (effetto
+            dei motori) e slittamento \(w_t \sim \mathcal{N}(0, Q)\).</li>
+          <li><strong>Sensore lineare</strong> con matrice \(H\) (traduttore dallo stato alle unità del sensore) e
+            rumore \(n_t \sim \mathcal{N}(0, R)\).</li>
           <li><strong>Partenza gaussiana</strong> \(\operatorname{bel}(x_0) = \mathcal{N}(\mu_0, \Sigma_0)\).</li>
         </ol>
 
@@ -462,10 +566,12 @@
               <span data-lang-block="it">Caso A: Partenza Nota (\(\Sigma_0 = 0.1\))</span>
             </h4>
             <p data-lang-block="en">
-              Initial position at a known docking base is sharp; Kalman Gain starts conservative, rejecting initial noisy sensor jitter until uncertainty grows.
+              Initial position at a known docking base is sharp; Kalman Gain starts conservative, rejecting initial
+              noisy sensor jitter until uncertainty grows.
             </p>
             <p data-lang-block="it">
-              Posizione iniziale certa alla base di ricarica: il guadagno iniziale resta basso per filtrare i primi picchi di rumore del sensore.
+              Posizione iniziale certa alla base di ricarica: il guadagno iniziale resta basso per filtrare i primi
+              picchi di rumore del sensore.
             </p>
           </div>
           <div class="note-panel accent">
@@ -474,19 +580,27 @@
               <span data-lang-block="it">Caso B: Ignoranza Totale (\(\Sigma_0 = 1000\))</span>
             </h4>
             <p data-lang-block="en">
-              Wide flat prior makes \(K_1 \approx H^{-1}\): the filter disregards the arbitrary zero guess and snaps instantly onto the first sensor reading \(z_1\).
+              Wide flat prior makes \(K_1 \approx H^{-1}\): the filter disregards the arbitrary zero guess and snaps
+              instantly onto the first sensor reading \(z_1\).
             </p>
             <p data-lang-block="it">
-              Una covarianza iniziale enorme porta \(K_1 \approx H^{-1}\): il filtro ignora l'ipotesi arbitraria e aggancia subito la prima lettura \(z_1\).
+              Una covarianza iniziale enorme porta \(K_1 \approx H^{-1}\): il filtro ignora l'ipotesi arbitraria e
+              aggancia subito la prima lettura \(z_1\).
             </p>
           </div>
         </div>
 
         <p class="prose" data-lang-block="en">
-          Extending state to the 2D floor plane yields position vector \(x_t = [x, y]^{\top}\) and a symmetric \(2\times 2\) covariance matrix \(\Sigma\). Off-diagonal entries \(\sigma_{xy}\) capture correlation between axes: visually tilting the \(3\sigma\) ellipse (99.7% mass) along diagonals, enabling <strong>cross-inference</strong>, where observing only \(x\) tightens uncertainty in \(y\) too.
+          Extending state to the 2D floor plane yields position vector \(x_t = [x, y]^{\top}\) and a symmetric \(2\times
+          2\) covariance matrix \(\Sigma\). Off-diagonal entries \(\sigma_{xy}\) capture correlation between axes:
+          visually tilting the \(3\sigma\) ellipse (99.7% mass) along diagonals, enabling
+          <strong>cross-inference</strong>, where observing only \(x\) tightens uncertainty in \(y\) too.
         </p>
         <p class="prose" data-lang-block="it">
-          Estendendo lo stato al piano 2D otteniamo il vettore \(x_t = [x, y]^{\top}\) e una matrice di covarianza simmetrica \(2\times 2\) \(\Sigma\). Gli elementi fuori diagonale \(\sigma_{xy}\) codificano la correlazione fra gli assi, inclinando l'ellisse \(3\sigma\) (99.7% di massa): misurare solo \(x\) permette di restringere per inferenza anche l'incertezza lungo \(y\).
+          Estendendo lo stato al piano 2D otteniamo il vettore \(x_t = [x, y]^{\top}\) e una matrice di covarianza
+          simmetrica \(2\times 2\) \(\Sigma\). Gli elementi fuori diagonale \(\sigma_{xy}\) codificano la correlazione
+          fra gli assi, inclinando l'ellisse \(3\sigma\) (99.7% di massa): misurare solo \(x\) permette di restringere
+          per inferenza anche l'incertezza lungo \(y\).
         </p>
 
         <h3 class="subsec" id="kf-walkthrough">
@@ -495,16 +609,21 @@
         </h3>
 
         <p class="prose" data-lang-block="en">
-          Every time step \(t\) executes the same four-stage loop. Notice how the Gaussian bell curve behaves visually: it <strong>shifts and flattens</strong> during motion, then <strong>snaps and sharpens</strong> when a sensor reading arrives.
+          Every time step \(t\) executes the same four-stage loop. Notice how the Gaussian bell curve behaves visually:
+          it <strong>shifts and flattens</strong> during motion, then <strong>snaps and sharpens</strong> when a sensor
+          reading arrives.
         </p>
         <p class="prose" data-lang-block="it">
-          Ad ogni istante \(t\), il filtro esegue sempre lo stesso ciclo a quattro fasi. Osserva cosa succede alla campana gaussiana: <strong>trasla e si appiattisce</strong> durante il moto, poi <strong>si centra e si restringe</strong> quando arriva la misura del sensore.
+          Ad ogni istante \(t\), il filtro esegue sempre lo stesso ciclo a quattro fasi. Osserva cosa succede alla
+          campana gaussiana: <strong>trasla e si appiattisce</strong> durante il moto, poi <strong>si centra e si
+            restringe</strong> quando arriva la misura del sensore.
         </p>
 
         <div class="math-display">
           <div class="math-eq-row" data-eq-explain="kf-p1">
             <div class="math-eq-col">\(\displaystyle \bar{\mu}_t = A\mu_{t-1} + B u_t\)</div>
-            <div class="math-eq-col">\(\displaystyle \bar{\Sigma}_t = A \Sigma_{t-1} A^{\top} + {\color{#ffd000} Q}\)</div>
+            <div class="math-eq-col">\(\displaystyle \bar{\Sigma}_t = A \Sigma_{t-1} A^{\top} + {\color{#ffd000} Q}\)
+            </div>
             <div class="math-eq-tag">(1. Predict)</div>
           </div>
           <div class="math-eq-row" data-eq-explain="kf-p2">
@@ -530,10 +649,18 @@
               <span data-lang-block="it">FASE 01 · PREDICT (MOTO AL BUIO)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              Starting from \(\mathcal{N}(\mu_{t-1}, \Sigma_{t-1})\), the mean advances via \(\bar{\mu}_t = A\mu_{t-1} + B u_t\). Why does covariance update as \(\bar{\Sigma}_t = A\Sigma_{t-1}A^{\top} + Q\) with \(A\) on <em>both</em> sides? Because in probability, scaling a random variable by \(A\) scales its variance quadratically (\(\operatorname{Var}(Ax) = A\operatorname{Var}(x)A^{\top}\)), and adding independent wheel slip \(w_t\) adds \(+Q\), <strong>widening and flattening the bell curve</strong>.
+              Starting from \(\mathcal{N}(\mu_{t-1}, \Sigma_{t-1})\), the mean advances via \(\bar{\mu}_t = A\mu_{t-1} +
+              B u_t\). Why does covariance update as \(\bar{\Sigma}_t = A\Sigma_{t-1}A^{\top} + Q\) with \(A\) on
+              <em>both</em> sides? Because in probability, scaling a random variable by \(A\) scales its variance
+              quadratically (\(\operatorname{Var}(Ax) = A\operatorname{Var}(x)A^{\top}\)), and adding independent wheel
+              slip \(w_t\) adds \(+Q\), <strong>widening and flattening the bell curve</strong>.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Partendo da \(\mathcal{N}(\mu_{t-1}, \Sigma_{t-1})\), la media avanza con \(\bar{\mu}_t = A\mu_{t-1} + B u_t\). Perché nella covarianza \(\bar{\Sigma}_t = A\Sigma_{t-1}A^{\top} + Q\) la matrice \(A\) compare due volte? Perché moltiplicare una variabile aleatoria per \(A\) ne scala la varianza al quadrato (\(\operatorname{Var}(Ax) = A\operatorname{Var}(x)A^{\top}\)); sommare poi il rumore indipendente delle ruote aggiunge \(+Q\), <strong>allargando e appiattendo la campana</strong>.
+              Partendo da \(\mathcal{N}(\mu_{t-1}, \Sigma_{t-1})\), la media avanza con \(\bar{\mu}_t = A\mu_{t-1} + B
+              u_t\). Perché nella covarianza \(\bar{\Sigma}_t = A\Sigma_{t-1}A^{\top} + Q\) la matrice \(A\) compare due
+              volte? Perché moltiplicare una variabile aleatoria per \(A\) ne scala la varianza al quadrato
+              (\(\operatorname{Var}(Ax) = A\operatorname{Var}(x)A^{\top}\)); sommare poi il rumore indipendente delle
+              ruote aggiunge \(+Q\), <strong>allargando e appiattendo la campana</strong>.
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--sensor);">
@@ -542,10 +669,18 @@
               <span data-lang-block="it">FASE 02 · INNOVATION (CONFRONTO COL SENSORE)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              A sensor reading \(z_t\) arrives with noise \(R\). Since \(\bar{\mu}_t\) lives in state coordinates, we first project it through \(H\bar{\mu}_t\) to obtain the <em>expected</em> sensor reading. The gap \(y_t = z_t - H\bar{\mu}_t\) is the <strong>innovation (surprise)</strong>. To judge whether \(y_t\) is large or small, we compute total comparison uncertainty \(S_t = H\bar{\Sigma}_t H^{\top} + R\), adding projected model uncertainty and sensor noise.
+              A sensor reading \(z_t\) arrives with noise \(R\). Since \(\bar{\mu}_t\) lives in state coordinates, we
+              first project it through \(H\bar{\mu}_t\) to obtain the <em>expected</em> sensor reading. The gap \(y_t =
+              z_t - H\bar{\mu}_t\) is the <strong>innovation (surprise)</strong>. To judge whether \(y_t\) is large or
+              small, we compute total comparison uncertainty \(S_t = H\bar{\Sigma}_t H^{\top} + R\), adding projected
+              model uncertainty and sensor noise.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Arriva la misura \(z_t\) (con rumore \(R\)). Poiché \(\bar{\mu}_t\) è nello spazio di stato, lo proiettiamo con \(H\bar{\mu}_t\) per ottenere la lettura che il sensore <em>dovrebbe</em> vedere. La differenza \(y_t = z_t - H\bar{\mu}_t\) è l'<strong>innovazione (sorpresa)</strong>. Per valutare quanto pesare questa sorpresa calcoliamo l'incertezza totale del confronto \(S_t = H\bar{\Sigma}_t H^{\top} + R\), somma dell'incertezza del modello proiettata sul sensore e del rumore \(R\).
+              Arriva la misura \(z_t\) (con rumore \(R\)). Poiché \(\bar{\mu}_t\) è nello spazio di stato, lo
+              proiettiamo con \(H\bar{\mu}_t\) per ottenere la lettura che il sensore <em>dovrebbe</em> vedere. La
+              differenza \(y_t = z_t - H\bar{\mu}_t\) è l'<strong>innovazione (sorpresa)</strong>. Per valutare quanto
+              pesare questa sorpresa calcoliamo l'incertezza totale del confronto \(S_t = H\bar{\Sigma}_t H^{\top} +
+              R\), somma dell'incertezza del modello proiettata sul sensore e del rumore \(R\).
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--gold);">
@@ -554,14 +689,22 @@
               <span data-lang-block="it">FASE 03 · KALMAN GAIN (ARBITRO DELLA FIDUCIA)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              The Kalman Gain \(K_t = \bar{\Sigma}_t H^{\top} S_t^{-1}\) is literally the ratio between model uncertainty and total uncertainty (in 1D with \(H=1\): \(K = \bar{\Sigma} / (\bar{\Sigma}+R) \in [0, 1]\)):<br />
-              &bull; <strong>Noisy sensor (\(R \gg \bar{\Sigma}\)):</strong> \(K_t \to 0\) (0% sensor, 100% model).<br />
-              &bull; <strong>Uncertain pose (\(\bar{\Sigma} \gg R\)):</strong> \(K_t \to H^{-1}\) (100% sensor, 0% model).
+              The Kalman Gain \(K_t = \bar{\Sigma}_t H^{\top} S_t^{-1}\) is literally the ratio between model
+              uncertainty and total uncertainty (in 1D with \(H=1\): \(K = \bar{\Sigma} / (\bar{\Sigma}+R) \in [0,
+              1]\)):<br />
+              &bull; <strong>Noisy sensor (\(R \gg \bar{\Sigma}\)):</strong> \(K_t \to 0\) (0% sensor, 100%
+              model).<br />
+              &bull; <strong>Uncertain pose (\(\bar{\Sigma} \gg R\)):</strong> \(K_t \to H^{-1}\) (100% sensor, 0%
+              model).
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Il guadagno \(K_t = \bar{\Sigma}_t H^{\top} S_t^{-1}\) è il rapporto tra l'incertezza del modello e l'incertezza totale \(S_t\) (in 1D con \(H=1\): \(K = \bar{\Sigma} / (\bar{\Sigma}+R) \in [0, 1]\), cioè la percentuale di ragione data al sensore):<br />
-              &bull; <strong>Sensore rumoroso (\(R \gg \bar{\Sigma}\)):</strong> \(K_t \to 0\) (0% sensore, 100% modello).<br />
-              &bull; <strong>Posizione incerta (\(\bar{\Sigma} \gg R\)):</strong> \(K_t \to H^{-1}\) (100% sensore, 0% modello).
+              Il guadagno \(K_t = \bar{\Sigma}_t H^{\top} S_t^{-1}\) è il rapporto tra l'incertezza del modello e
+              l'incertezza totale \(S_t\) (in 1D con \(H=1\): \(K = \bar{\Sigma} / (\bar{\Sigma}+R) \in [0, 1]\), cioè
+              la percentuale di ragione data al sensore):<br />
+              &bull; <strong>Sensore rumoroso (\(R \gg \bar{\Sigma}\)):</strong> \(K_t \to 0\) (0% sensore, 100%
+              modello).<br />
+              &bull; <strong>Posizione incerta (\(\bar{\Sigma} \gg R\)):</strong> \(K_t \to H^{-1}\) (100% sensore, 0%
+              modello).
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--gold);">
@@ -570,19 +713,31 @@
               <span data-lang-block="it">FASE 04 · POSTERIOR UPDATE (FUSIONE &amp; CONTRAZIONE)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              We shift the predicted mean by fraction \(K_t\) of the surprise: \(\mu_t = \bar{\mu}_t + K_t y_t\). Why does \(\Sigma_t = (I - K_t H)\bar{\Sigma}_t\) always shrink? Because multiplying two independent Gaussian bells adds their <em>precisions</em> (\(\Sigma_t^{-1} = \bar{\Sigma}_t^{-1} + R^{-1}\)), making the posterior bell strictly narrower than <em>both</em> the motion prediction and the sensor alone!
+              We shift the predicted mean by fraction \(K_t\) of the surprise: \(\mu_t = \bar{\mu}_t + K_t y_t\). Why
+              does \(\Sigma_t = (I - K_t H)\bar{\Sigma}_t\) always shrink? Because multiplying two independent Gaussian
+              bells adds their <em>precisions</em> (\(\Sigma_t^{-1} = \bar{\Sigma}_t^{-1} + R^{-1}\)), making the
+              posterior bell strictly narrower than <em>both</em> the motion prediction and the sensor alone!
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Correggiamo la media sommando la sorpresa pesata da \(K_t\): \(\mu_t = \bar{\mu}_t + K_t y_t\). Perché la covarianza \(\Sigma_t = (I - K_t H)\bar{\Sigma}_t\) si rimpicciolisce sempre? Perché moltiplicare due campane gaussiane equivale a sommarne le <em>precisioni</em> (\(\Sigma_t^{-1} = \bar{\Sigma}_t^{-1} + R^{-1}\)), rendendo la nuova gaussiana sempre più stretta di <em>entrambe</em> le fonti prese da sole!
+              Correggiamo la media sommando la sorpresa pesata da \(K_t\): \(\mu_t = \bar{\mu}_t + K_t y_t\). Perché la
+              covarianza \(\Sigma_t = (I - K_t H)\bar{\Sigma}_t\) si rimpicciolisce sempre? Perché moltiplicare due
+              campane gaussiane equivale a sommarne le <em>precisioni</em> (\(\Sigma_t^{-1} = \bar{\Sigma}_t^{-1} +
+              R^{-1}\)), rendendo la nuova gaussiana sempre più stretta di <em>entrambe</em> le fonti prese da sole!
             </p>
           </div>
         </div>
 
         <p class="prose" data-lang-block="en">
-          Over repeated runs, steady-state Kalman fusion satisfies the <strong>Best Linear Unbiased Estimator (BLUE)</strong> bound, cutting RMSE localization error by <strong>~75% (from \(1.0\text{ m}\) down to \(0.25\text{ m}\))</strong>. Yet it relies strictly on linear matrices: rotating headings (\(\cos\theta, \sin\theta\)), polar camera measurements \((r, \phi)\), and bimodal corridors violate its assumptions.
+          Over repeated runs, steady-state Kalman fusion satisfies the <strong>Best Linear Unbiased Estimator
+            (BLUE)</strong> bound, cutting RMSE localization error by <strong>~75% (from \(1.0\text{ m}\) down to
+            \(0.25\text{ m}\))</strong>. Yet it relies strictly on linear matrices: rotating headings (\(\cos\theta,
+          \sin\theta\)), polar camera measurements \((r, \phi)\), and bimodal corridors violate its assumptions.
         </p>
         <p class="prose" data-lang-block="it">
-          A regime, la fusione di Kalman raggiunge il limite teorico ottimo <strong>BLUE (Best Linear Unbiased Estimator)</strong>, abbattendo l'errore RMSE di circa il <strong>75% (da \(1.0\text{ m}\) a \(0.25\text{ m}\))</strong>. Tuttavia, poggia su matrici strettamente lineari: rotazioni trigonometriche (\(\cos\theta, \sin\theta\)), misure polari \((r, \phi)\) e corridoi simmetrici ne rompono le ipotesi.
+          A regime, la fusione di Kalman raggiunge il limite teorico ottimo <strong>BLUE (Best Linear Unbiased
+            Estimator)</strong>, abbattendo l'errore RMSE di circa il <strong>75% (da \(1.0\text{ m}\) a \(0.25\text{
+            m}\))</strong>. Tuttavia, poggia su matrici strettamente lineari: rotazioni trigonometriche (\(\cos\theta,
+          \sin\theta\)), misure polari \((r, \phi)\) e corridoi simmetrici ne rompono le ipotesi.
         </p>
 
         <!-- Variable Reference Table -->
@@ -592,59 +747,58 @@
               <tr>
                 <th>Symbol</th>
                 <th>Dim</th>
-                <th><span data-lang-block="en">Role in Linear KF</span><span data-lang-block="it">Ruolo nel KF Lineare</span></th>
+                <th><span data-lang-block="en">Role in Linear KF</span><span data-lang-block="it">Ruolo nel KF
+                    Lineare</span></th>
               </tr>
             </thead>
             <tbody>
-              <tr><td>\(x_t,\, \mu_t\)</td><td>\(n\times 1\)</td><td><span data-lang-block="en">Hidden state vector and posterior Gaussian mean</span><span data-lang-block="it">Stato latente e media della gaussiana a posteriori</span></td></tr>
-              <tr><td>\(A,\, B\)</td><td>\(n\times n,\; n\times k\)</td><td><span data-lang-block="en">State transition matrix &amp; control input projection matrix</span><span data-lang-block="it">Matrice di transizione stato e proiezione controllo</span></td></tr>
-              <tr><td>\(Q\)</td><td>\(n\times n\)</td><td><span data-lang-block="en">Process noise covariance (slip, actuator disturbances)</span><span data-lang-block="it">Covarianza rumore di processo (slittamento, disturbi)</span></td></tr>
-              <tr><td>\(z_t,\, H,\, R\)</td><td>\(m\times 1,\; m\times n,\; m\times m\)</td><td><span data-lang-block="en">Sensor measurement, state-to-sensor map, sensor noise covariance</span><span data-lang-block="it">Misura sensore, proiezione stato&rarr;sensore, rumore misura</span></td></tr>
-              <tr><td>\(y_t,\, S_t,\, K_t\)</td><td>\(m\times 1,\; m\times m,\; n\times m\)</td><td><span data-lang-block="en">Innovation surprise, total innovation covariance, optimal Kalman Gain</span><span data-lang-block="it">Innovazione residua, covarianza totale, guadagno ottimo di Kalman</span></td></tr>
+              <tr>
+                <td>\(x_t,\, \mu_t\)</td>
+                <td>\(n\times 1\)</td>
+                <td><span data-lang-block="en">Hidden state vector and posterior Gaussian mean</span><span
+                    data-lang-block="it">Stato latente e media della gaussiana a posteriori</span></td>
+              </tr>
+              <tr>
+                <td>\(A,\, B\)</td>
+                <td>\(n\times n,\; n\times k\)</td>
+                <td><span data-lang-block="en">State transition matrix &amp; control input projection matrix</span><span
+                    data-lang-block="it">Matrice di transizione stato e proiezione controllo</span></td>
+              </tr>
+              <tr>
+                <td>\(Q\)</td>
+                <td>\(n\times n\)</td>
+                <td><span data-lang-block="en">Process noise covariance (slip, actuator disturbances)</span><span
+                    data-lang-block="it">Covarianza rumore di processo (slittamento, disturbi)</span></td>
+              </tr>
+              <tr>
+                <td>\(z_t,\, H,\, R\)</td>
+                <td>\(m\times 1,\; m\times n,\; m\times m\)</td>
+                <td><span data-lang-block="en">Sensor measurement, state-to-sensor map, sensor noise
+                    covariance</span><span data-lang-block="it">Misura sensore, proiezione stato&rarr;sensore, rumore
+                    misura</span></td>
+              </tr>
+              <tr>
+                <td>\(y_t,\, S_t,\, K_t\)</td>
+                <td>\(m\times 1,\; m\times m,\; n\times m\)</td>
+                <td><span data-lang-block="en">Innovation surprise, total innovation covariance, optimal Kalman
+                    Gain</span><span data-lang-block="it">Innovazione residua, covarianza totale, guadagno ottimo di
+                    Kalman</span></td>
+              </tr>
             </tbody>
           </table>
         </div>
 
         <!-- INTERACTIVE LAB 01: KALMAN FILTER -->
-        <div class="sim-lab" id="lab-kf">
-          <div class="sim-lab-head">
+        <div class="sim-lab cinema-lab" id="lab-kf">
+          <div class="sim-lab-head cn-head">
             <div class="sim-lab-title">
               <span class="sim-lab-tag">LAB 01</span>
-              <span data-lang-block="en">Linear Kalman Filter — Live Gain &amp; Gaussian Fusion</span>
-              <span data-lang-block="it">Filtro di Kalman Lineare — Guadagno \(K\) &amp; Fusione Gaussiana</span>
+              <span data-lang-block="en">Linear Kalman Filter — 1D Gaussian Fusion &amp; Gain \(K_t\)</span>
+              <span data-lang-block="it">Filtro di Kalman Lineare — Fusione Gaussiana 1D &amp; Guadagno \(K_t\)</span>
             </div>
+            <div class="cn-head-right" data-cn-head-right></div>
           </div>
-          <div class="sim-body">
-            <div class="sim-canvas-col">
-              <div class="sim-canvas-wrap"><canvas data-sim-canvas></canvas></div>
-              <div class="sim-controls">
-                <div class="sim-btn-row">
-                  <button type="button" class="sim-btn primary" data-sim-play>Pause</button>
-                  <button type="button" class="sim-btn" data-sim-step>Step</button>
-                  <button type="button" class="sim-btn" data-sim-reset>Reset</button>
-                  <button type="button" class="sim-btn" data-sim-kf-noise></button>
-                  <button type="button" class="sim-btn" data-sim-kf-init></button>
-                </div>
-                <label class="sim-speed"><span data-sim-speed-lbl>Speed</span><input type="range" min="0.4" max="2.4" step="0.1" value="1.0" data-sim-speed /></label>
-              </div>
-            </div>
-            <div class="sim-narrator">
-              <div>
-                <div class="phase-timeline" data-sim-timeline>
-                  <div class="phase-step" data-phase-idx="0"></div>
-                  <div class="phase-step" data-phase-idx="1"></div>
-                  <div class="phase-step" data-phase-idx="2"></div>
-                  <div class="phase-step" data-phase-idx="3"></div>
-                </div>
-                <div class="narrator-copy" style="margin-top:14px;">
-                  <h4 data-sim-title></h4>
-                  <p data-sim-desc></p>
-                  <div class="narrator-eq" data-sim-eq></div>
-                </div>
-              </div>
-              <div class="narrator-telemetry" data-sim-telemetry></div>
-            </div>
-          </div>
+          <div data-cn-mount></div>
         </div>
       </section>
 
@@ -657,10 +811,17 @@
         </div>
 
         <p class="prose" data-lang-block="en">
-          When a robot wakes up inside a symmetric corridor with two identical doors (at \(x=2\text{ m}\) and \(x=8\text{ m}\)), probability density is <strong>bimodal</strong>. A single-Gaussian Kalman Filter averages the two hypotheses into a phantom mean at \(x=5\text{ m}\), potentially placing the robot inside a wall! Similarly, forward-and-turn wheel slip bends odometry uncertainty into a skewed <strong>banana arc</strong> rather than a convex ellipse.
+          When a robot wakes up inside a symmetric corridor with two identical doors (at \(x=2\text{ m}\) and
+          \(x=8\text{ m}\)), probability density is <strong>bimodal</strong>. A single-Gaussian Kalman Filter averages
+          the two hypotheses into a phantom mean at \(x=5\text{ m}\), potentially placing the robot inside a wall!
+          Similarly, forward-and-turn wheel slip bends odometry uncertainty into a skewed <strong>banana arc</strong>
+          rather than a convex ellipse.
         </p>
         <p class="prose" data-lang-block="it">
-          Quando un robot si sveglia in un corridoio simmetrico con due porte identiche (\(x=2\text{ m}\) e \(x=8\text{ m}\)), la densità reale è <strong>bimodale</strong>. Un Filtro di Kalman a singola gaussiana medierebbe i due picchi in una falsa media a \(x=5\text{ m}\), schiantando il robot contro il muro! Allo stesso modo, lo slittamento curvilineo piega l'incertezza in una caratteristica <strong>nube a banana</strong> non ellittica.
+          Quando un robot si sveglia in un corridoio simmetrico con due porte identiche (\(x=2\text{ m}\) e \(x=8\text{
+          m}\)), la densità reale è <strong>bimodale</strong>. Un Filtro di Kalman a singola gaussiana medierebbe i due
+          picchi in una falsa media a \(x=5\text{ m}\), schiantando il robot contro il muro! Allo stesso modo, lo
+          slittamento curvilineo piega l'incertezza in una caratteristica <strong>nube a banana</strong> non ellittica.
         </p>
 
         <h3 class="subsec" id="pf-cycle">
@@ -669,10 +830,16 @@
         </h3>
 
         <p class="prose" data-lang-block="en">
-          Monte Carlo Localization (MCL) trades analytical equations for a cloud of \(M\) <strong>discrete particles</strong> \(\chi_t = \{ (x_t^{[i]}, w_t^{[i]}) \}_{i=1}^M\). By tracking independent hypotheses directly, the cloud effortlessly splits across ambiguous hallways, bends along non-linear paths, and converges to sub-\(0.3\text{ m}\) accuracy even against \(\pm 2.5\text{ m}\) sensor outliers:
+          Monte Carlo Localization (MCL) trades analytical equations for a cloud of \(M\) <strong>discrete
+            particles</strong> \(\chi_t = \{ (x_t^{[i]}, w_t^{[i]}) \}_{i=1}^M\). By tracking independent hypotheses
+          directly, the cloud effortlessly splits across ambiguous hallways, bends along non-linear paths, and converges
+          to sub-\(0.3\text{ m}\) accuracy even against \(\pm 2.5\text{ m}\) sensor outliers:
         </p>
         <p class="prose" data-lang-block="it">
-          La Monte Carlo Localization (MCL) sostituisce le equazioni chiuse con una nuvola di \(M\) <strong>particelle discrete</strong> \(\chi_t = \{ (x_t^{[i]}, w_t^{[i]}) \}_{i=1}^M\). Simulando ipotesi indipendenti, la nube si biforca nei bivi simmetrici, segue curve non lineari e converge sotto \(0.3\text{ m}\) di errore anche con picchi di rumore sensore a \(\pm 2.5\text{ m}\):
+          La Monte Carlo Localization (MCL) sostituisce le equazioni chiuse con una nuvola di \(M\) <strong>particelle
+            discrete</strong> \(\chi_t = \{ (x_t^{[i]}, w_t^{[i]}) \}_{i=1}^M\). Simulando ipotesi indipendenti, la nube
+          si biforca nei bivi simmetrici, segue curve non lineari e converge sotto \(0.3\text{ m}\) di errore anche con
+          picchi di rumore sensore a \(\pm 2.5\text{ m}\):
         </p>
 
         <div class="math-display">
@@ -682,7 +849,8 @@
             <div class="math-eq-tag">(Importance Weighting)</div>
           </div>
           <div class="math-eq-row" data-eq-explain="pf-comb">
-            <div class="math-eq-col">\(\displaystyle U_i = r + \frac{i - 1}{M}, \quad r \sim \mathcal{U}\!\left(0, \frac{1}{M}\right)\)</div>
+            <div class="math-eq-col">\(\displaystyle U_i = r + \frac{i - 1}{M}, \quad r \sim \mathcal{U}\!\left(0,
+              \frac{1}{M}\right)\)</div>
             <div class="math-eq-col">\(\displaystyle N_{\text{eff}} = \frac{1}{\sum_i (w_t^{[i]})^2}\)</div>
             <div class="math-eq-tag">(Low-Variance Comb)</div>
           </div>
@@ -695,10 +863,18 @@
               <span data-lang-block="it">FASE 01 · IPOTESI DISCRETE (CLONI VIRTUALI)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              Instead of a single bell curve, we spawn \(M\) <strong>virtual clones of the robot</strong> \(x_0^{[i]}\) across the map, each starting with equal plausibility \(w_0^{[i]} = 1/M\). Each particle is a concrete hypothesis: <em>&ldquo;What if the robot were right here at \((x^{[i]}, y^{[i]}, \theta^{[i]})\)?&rdquo;</em> This immediately handles global ignorance or symmetric rooms without averaging doors together.
+              Instead of a single bell curve, we spawn \(M\) <strong>virtual clones of the robot</strong> \(x_0^{[i]}\)
+              across the map, each starting with equal plausibility \(w_0^{[i]} = 1/M\). Each particle is a concrete
+              hypothesis: <em>&ldquo;What if the robot were right here at \((x^{[i]}, y^{[i]},
+                \theta^{[i]})\)?&rdquo;</em> This immediately handles global ignorance or symmetric rooms without
+              averaging doors together.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Invece di una sola campana gaussiana, generiamo \(M\) <strong>cloni virtuali del robot</strong> \(x_0^{[i]}\) sparsi nella mappa, tutti con lo stesso peso iniziale \(w_0^{[i]} = 1/M\). Ogni particella è un'ipotesi concreta: <em>&ldquo;E se il robot si trovasse esattamente qui in \((x^{[i]}, y^{[i]}, \theta^{[i]})\)?&rdquo;</em> Così possiamo rappresentare più corridoi o partenza da zero senza mediare le porte.
+              Invece di una sola campana gaussiana, generiamo \(M\) <strong>cloni virtuali del robot</strong>
+              \(x_0^{[i]}\) sparsi nella mappa, tutti con lo stesso peso iniziale \(w_0^{[i]} = 1/M\). Ogni particella è
+              un'ipotesi concreta: <em>&ldquo;E se il robot si trovasse esattamente qui in \((x^{[i]}, y^{[i]},
+                \theta^{[i]})\)?&rdquo;</em> Così possiamo rappresentare più corridoi o partenza da zero senza mediare
+              le porte.
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--slate);">
@@ -707,10 +883,16 @@
               <span data-lang-block="it">FASE 02 · PREDIZIONE STOCASTICA (CAMPIONAMENTO DEL MOTO)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              When the real robot executes command \(u_t\), we move every particle forward through the exact physical motion model, adding an <strong>independent random noise draw</strong> from \(Q\) to each one. Because every particle experiences slightly different slip, the cloud naturally spreads and curves into non-linear banana shapes without any Jacobian approximation.
+              When the real robot executes command \(u_t\), we move every particle forward through the exact physical
+              motion model, adding an <strong>independent random noise draw</strong> from \(Q\) to each one. Because
+              every particle experiences slightly different slip, the cloud naturally spreads and curves into non-linear
+              banana shapes without any Jacobian approximation.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Quando il robot reale esegue il comando \(u_t\), facciamo muovere ogni particella con il modello fisico aggiungendo a ciascuna un <strong>diverso errore casuale</strong> estratto da \(Q\). Poiché ogni clone subisce uno slittamento leggermente diverso, la nuvola si apre e si piega naturalmente lungo curve non lineari a banana senza bisogno di matrici Jacobiane.
+              Quando il robot reale esegue il comando \(u_t\), facciamo muovere ogni particella con il modello fisico
+              aggiungendo a ciascuna un <strong>diverso errore casuale</strong> estratto da \(Q\). Poiché ogni clone
+              subisce uno slittamento leggermente diverso, la nuvola si apre e si piega naturalmente lungo curve non
+              lineari a banana senza bisogno di matrici Jacobiane.
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--sensor);">
@@ -719,22 +901,41 @@
               <span data-lang-block="it">FASE 03 · VEROSIMIGLIANZA &amp; DEGENERAZIONE (\(N_{\text{eff}}\))</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              The real sensor reads \(z_t\) (with tolerance \(\sigma\)). For each particle \(x_t^{[i]}\), we ask: <em>how close is this particle to what the sensor saw?</em> Evaluating the Gaussian bell \(p(z_t \mid x_t^{[i]})\) boosts particles near \(z_t\) and zeroes out far ones, then \(\eta\) normalizes \(\sum w_t^{[i]} = 1\) (with a zero-sum guard if all weights collapse). Without intervention, after a few steps almost all particles die (\(N_{\text{eff}} = 1/\sum (w^{[i]})^2 \to 1\), <strong>particle degeneracy</strong>).
+              The real sensor reads \(z_t\) (with tolerance \(\sigma\)). For each particle \(x_t^{[i]}\), we ask:
+              <em>how close is this particle to what the sensor saw?</em> Evaluating the Gaussian bell \(p(z_t \mid
+              x_t^{[i]})\) boosts particles near \(z_t\) and zeroes out far ones, then \(\eta\) normalizes \(\sum
+              w_t^{[i]} = 1\) (with a zero-sum guard if all weights collapse). Without intervention, after a few steps
+              almost all particles die (\(N_{\text{eff}} = 1/\sum (w^{[i]})^2 \to 1\), <strong>particle
+                degeneracy</strong>).
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Il sensore reale legge \(z_t\) (con tolleranza \(\sigma\)). Per ogni particella \(x_t^{[i]}\) valutiamo la campana di verosimiglianza \(p(z_t \mid x_t^{[i]})\): le particelle vicine a \(z_t\) ricevono un peso alto, quelle lontane scendono quasi a zero, e \(\eta\) normalizza \(\sum w_t^{[i]} = 1\) (con guardia anti-divisione per zero). Senza ricampionamento, però, in pochi passi quasi tutte le particelle avrebbero peso nullo (\(N_{\text{eff}} = 1/\sum (w^{[i]})^2 \to 1\), <strong>degenerazione</strong>).
+              Il sensore reale legge \(z_t\) (con tolleranza \(\sigma\)). Per ogni particella \(x_t^{[i]}\) valutiamo la
+              campana di verosimiglianza \(p(z_t \mid x_t^{[i]})\): le particelle vicine a \(z_t\) ricevono un peso
+              alto, quelle lontane scendono quasi a zero, e \(\eta\) normalizza \(\sum w_t^{[i]} = 1\) (con guardia
+              anti-divisione per zero). Senza ricampionamento, però, in pochi passi quasi tutte le particelle avrebbero
+              peso nullo (\(N_{\text{eff}} = 1/\sum (w^{[i]})^2 \to 1\), <strong>degenerazione</strong>).
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--gold);">
             <div class="step-idx">
-              <span data-lang-block="en">PHASE 04 · LOW-VARIANCE ROULETTE \(\mathcal{O}(M)\) &amp; \(\alpha\)-TRICK</span>
+              <span data-lang-block="en">PHASE 04 · LOW-VARIANCE ROULETTE \(\mathcal{O}(M)\) &amp;
+                \(\alpha\)-TRICK</span>
               <span data-lang-block="it">FASE 04 · RUOTA LOW-VARIANCE \(\mathcal{O}(M)\) &amp; \(\alpha\)-TRICK</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              To focus CPU power where probability lives, we lay weights onto a roulette wheel of circumference \(1\). Instead of spinning \(M\) independent times, we pick <strong>one random start</strong> \(r \in [0, 1/M)\) and step a rigid comb \(U_i = r + \tfrac{i-1}{M}\): wide gold slices get hit multiple times (cloned into equal-weight \(1/M\) children) while tiny slices vanish in \(\mathcal{O}(M)\) time. Replacing \(\alpha=5\%\) with random sparks allows instant recovery if the robot is kidnapped.
+              To focus CPU power where probability lives, we lay weights onto a roulette wheel of circumference \(1\).
+              Instead of spinning \(M\) independent times, we pick <strong>one random start</strong> \(r \in [0, 1/M)\)
+              and step a rigid comb \(U_i = r + \tfrac{i-1}{M}\): wide gold slices get hit multiple times (cloned into
+              equal-weight \(1/M\) children) while tiny slices vanish in \(\mathcal{O}(M)\) time. Replacing
+              \(\alpha=5\%\) with random sparks allows instant recovery if the robot is kidnapped.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Per non sprecare calcoli su particelle morte, disponiamo i pesi su una ruota di circonferenza \(1\). Anziché girare la ruota \(M\) volte a caso, estraiamo <strong>un solo punto iniziale</strong> \(r \in [0, 1/M)\) e usiamo un pettine fisso \(U_i = r + \tfrac{i-1}{M}\): le fette grandi vengono colpite e clonate più volte (con peso resettato a \(1/M\)) e quelle piccole spariscono in tempo \(\mathcal{O}(M)\). Sostituire un \(\alpha=5\%\) di particelle con scintille casuali permette di ritrovare il robot se viene spostato di peso (<em>Kidnapping</em>).
+              Per non sprecare calcoli su particelle morte, disponiamo i pesi su una ruota di circonferenza \(1\).
+              Anziché girare la ruota \(M\) volte a caso, estraiamo <strong>un solo punto iniziale</strong> \(r \in [0,
+              1/M)\) e usiamo un pettine fisso \(U_i = r + \tfrac{i-1}{M}\): le fette grandi vengono colpite e clonate
+              più volte (con peso resettato a \(1/M\)) e quelle piccole spariscono in tempo \(\mathcal{O}(M)\).
+              Sostituire un \(\alpha=5\%\) di particelle con scintille casuali permette di ritrovare il robot se viene
+              spostato di peso (<em>Kidnapping</em>).
             </p>
           </div>
         </div>
@@ -751,64 +952,42 @@
             </thead>
             <tbody>
               <tr>
-                <td><span data-lang-block="en">Shape / Modality</span><span data-lang-block="it">Forma / Modalità</span></td>
-                <td><span data-lang-block="en">Strictly unimodal Gaussian</span><span data-lang-block="it">Strettamente unimodale gaussiana</span></td>
-                <td><span data-lang-block="en">Arbitrary, multi-modal, skewed clouds</span><span data-lang-block="it">Arbitraria, multimodale, non parametrica</span></td>
+                <td><span data-lang-block="en">Shape / Modality</span><span data-lang-block="it">Forma / Modalità</span>
+                </td>
+                <td><span data-lang-block="en">Strictly unimodal Gaussian</span><span data-lang-block="it">Strettamente
+                    unimodale gaussiana</span></td>
+                <td><span data-lang-block="en">Arbitrary, multi-modal, skewed clouds</span><span
+                    data-lang-block="it">Arbitraria, multimodale, non parametrica</span></td>
               </tr>
               <tr>
-                <td><span data-lang-block="en">Memory Footprint</span><span data-lang-block="it">Impronta Memoria</span></td>
+                <td><span data-lang-block="en">Memory Footprint</span><span data-lang-block="it">Impronta Memoria</span>
+                </td>
                 <td>~16 Bytes (mean + matrix, \(\mathcal{O}(1)\))</td>
                 <td>~480 KB (\(M=1000\text{–}5000\) particles, \(\mathcal{O}(M)\))</td>
               </tr>
               <tr>
-                <td><span data-lang-block="en">Global Initialization</span><span data-lang-block="it">Start Globale</span></td>
-                <td><span data-lang-block="en">Weak (collapses ambiguous doors)</span><span data-lang-block="it">Debole (media porte simmetriche)</span></td>
-                <td><span data-lang-block="en">Strong (converges from uniform cloud)</span><span data-lang-block="it">Eccellente (converge da distribuzione piatta)</span></td>
+                <td><span data-lang-block="en">Global Initialization</span><span data-lang-block="it">Start
+                    Globale</span></td>
+                <td><span data-lang-block="en">Weak (collapses ambiguous doors)</span><span data-lang-block="it">Debole
+                    (media porte simmetriche)</span></td>
+                <td><span data-lang-block="en">Strong (converges from uniform cloud)</span><span
+                    data-lang-block="it">Eccellente (converge da distribuzione piatta)</span></td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <!-- INTERACTIVE LAB 02: PARTICLE FILTER -->
-        <div class="sim-lab" id="lab-pf">
-          <div class="sim-lab-head">
+        <div class="sim-lab cinema-lab" id="lab-pf">
+          <div class="sim-lab-head cn-head">
             <div class="sim-lab-title">
               <span class="sim-lab-tag">LAB 02</span>
-              <span data-lang-block="en">Particle Filter — Low-Variance Roulette &amp; Kidnapped Recovery</span>
-              <span data-lang-block="it">Filtro a Particelle — Ruota a Bassa Varianza &amp; Kidnapping</span>
+              <span data-lang-block="en">Particle Filter (MCL) — Bimodal Corridor, Roulette &amp; Kidnapping</span>
+              <span data-lang-block="it">Filtro a Particelle (MCL) — Corridoio Bimodale, Ruota &amp; Kidnapping</span>
             </div>
+            <div class="cn-head-right" data-cn-head-right></div>
           </div>
-          <div class="sim-body">
-            <div class="sim-canvas-col">
-              <div class="sim-canvas-wrap"><canvas data-sim-canvas></canvas></div>
-              <div class="sim-controls">
-                <div class="sim-btn-row">
-                  <button type="button" class="sim-btn primary" data-sim-play>Pause</button>
-                  <button type="button" class="sim-btn" data-sim-step>Step</button>
-                  <button type="button" class="sim-btn" data-sim-reset>Reset</button>
-                  <button type="button" class="sim-btn" data-sim-pf-kidnap>Kidnap Robot</button>
-                  <button type="button" class="sim-btn" data-sim-pf-alpha></button>
-                </div>
-                <label class="sim-speed"><span data-sim-speed-lbl>Speed</span><input type="range" min="0.4" max="2.4" step="0.1" value="1.0" data-sim-speed /></label>
-              </div>
-            </div>
-            <div class="sim-narrator">
-              <div>
-                <div class="phase-timeline" data-sim-timeline>
-                  <div class="phase-step" data-phase-idx="0"></div>
-                  <div class="phase-step" data-phase-idx="1"></div>
-                  <div class="phase-step" data-phase-idx="2"></div>
-                  <div class="phase-step" data-phase-idx="3"></div>
-                </div>
-                <div class="narrator-copy" style="margin-top:14px;">
-                  <h4 data-sim-title></h4>
-                  <p data-sim-desc></p>
-                  <div class="narrator-eq" data-sim-eq></div>
-                </div>
-              </div>
-              <div class="narrator-telemetry" data-sim-telemetry></div>
-            </div>
-          </div>
+          <div data-cn-mount></div>
         </div>
       </section>
 
@@ -821,20 +1000,30 @@
         </div>
 
         <p class="prose" data-lang-block="en">
-          Monte Carlo sampling fixes multimodality, yet introduces random resampling jitter that destabilizes delicate PID lane-keeping controllers. To achieve deterministic repeatability on a low-cost <strong>$15 downward-facing monocular camera</strong> (with zero indoor GPS), Duckietown drops global map coordinates and slices the world down to a local 2D lane frame:
+          Monte Carlo sampling fixes multimodality, yet introduces random resampling jitter that destabilizes delicate
+          PID lane-keeping controllers. To achieve deterministic repeatability on a low-cost <strong>$15 downward-facing
+            monocular camera</strong> (with zero indoor GPS), Duckietown drops global map coordinates and slices the
+          world down to a local 2D lane frame:
         </p>
         <p class="prose" data-lang-block="it">
-          Il campionamento Monte Carlo risolve la multimodalità, ma introduce jitter stocastico dannoso per i controllori PID di mantenimento corsia. Per ottenere stabilità deterministica con una sola <strong>telecamera monoculare da $15</strong> (senza GPS indoor), Duckietown abbandona le coordinate globali riducendo lo stato al riferimento locale della corsia:
+          Il campionamento Monte Carlo risolve la multimodalità, ma introduce jitter stocastico dannoso per i
+          controllori PID di mantenimento corsia. Per ottenere stabilità deterministica con una sola <strong>telecamera
+            monoculare da $15</strong> (senza GPS indoor), Duckietown abbandona le coordinate globali riducendo lo stato
+          al riferimento locale della corsia:
         </p>
 
         <div class="split-2">
           <div class="note-panel accent">
             <h4>\(x_t = [d, \varphi]^{\top}\) &nbsp;(Local Lane Frame)</h4>
             <ul>
-              <li data-lang-block="en"><strong>\(d\) (Lateral offset):</strong> \(d \gt 0\) left of lane center, \(d \lt 0\) drifted right toward outer border.</li>
-              <li data-lang-block="it"><strong>\(d\) (Offset laterale):</strong> \(d \gt 0\) a sinistra del centro, \(d \lt 0\) a destra verso la striscia bianca.</li>
-              <li data-lang-block="en"><strong>\(\varphi\) (Heading error):</strong> \(\varphi \gt 0\) steered left relative to road tangent, \(\varphi \lt 0\) steered right.</li>
-              <li data-lang-block="it"><strong>\(\varphi\) (Errore angolare):</strong> \(\varphi \gt 0\) muso rivolto a sinistra della corsia, \(\varphi \lt 0\) a destra.</li>
+              <li data-lang-block="en"><strong>\(d\) (Lateral offset):</strong> \(d \gt 0\) left of lane center, \(d \lt
+                0\) drifted right toward outer border.</li>
+              <li data-lang-block="it"><strong>\(d\) (Offset laterale):</strong> \(d \gt 0\) a sinistra del centro, \(d
+                \lt 0\) a destra verso la striscia bianca.</li>
+              <li data-lang-block="en"><strong>\(\varphi\) (Heading error):</strong> \(\varphi \gt 0\) steered left
+                relative to road tangent, \(\varphi \lt 0\) steered right.</li>
+              <li data-lang-block="it"><strong>\(\varphi\) (Errore angolare):</strong> \(\varphi \gt 0\) muso rivolto a
+                sinistra della corsia, \(\varphi \lt 0\) a destra.</li>
             </ul>
           </div>
           <div class="note-panel">
@@ -843,10 +1032,16 @@
               <span data-lang-block="it">Topologia Discreta a Matrice (\(60 \times 60\))</span>
             </h4>
             <p data-lang-block="en">
-              Continuous space becomes a fixed \(N = 60 \times 60\) grid of cell centroids \(x^i = (d^i, \varphi^i)\) initialized via <code>histogram_prior</code> (\(\mathcal{N}(\mu_0, \Sigma_0)\)). Mathematically, the discrete belief is a weighted sum of <strong>Dirac deltas</strong>: \(\operatorname{bel}(x_t) = \sum_{i=1}^N w_t^i\,\delta(x_t - x^i)\).
+              Continuous space becomes a fixed \(N = 60 \times 60\) grid of cell centroids \(x^i = (d^i, \varphi^i)\)
+              initialized via <code>histogram_prior</code> (\(\mathcal{N}(\mu_0, \Sigma_0)\)). Mathematically, the
+              discrete belief is a weighted sum of <strong>Dirac deltas</strong>: \(\operatorname{bel}(x_t) =
+              \sum_{i=1}^N w_t^i\,\delta(x_t - x^i)\).
             </p>
             <p data-lang-block="it">
-              Lo spazio continuo diventa una griglia statica di \(N = 60 \times 60\) centroidi \(x^i = (d^i, \varphi^i)\) inizializzata con <code>histogram_prior</code> (\(\mathcal{N}(\mu_0, \Sigma_0)\)). Matematicamente è una somma pesata di <strong>delta di Dirac</strong>: \(\operatorname{bel}(x_t) = \sum_{i=1}^N w_t^i\,\delta(x_t - x^i)\).
+              Lo spazio continuo diventa una griglia statica di \(N = 60 \times 60\) centroidi \(x^i = (d^i,
+              \varphi^i)\) inizializzata con <code>histogram_prior</code> (\(\mathcal{N}(\mu_0, \Sigma_0)\)).
+              Matematicamente è una somma pesata di <strong>delta di Dirac</strong>: \(\operatorname{bel}(x_t) =
+              \sum_{i=1}^N w_t^i\,\delta(x_t - x^i)\).
             </p>
           </div>
         </div>
@@ -857,119 +1052,142 @@
         </h3>
 
         <p class="prose" data-lang-block="en">
-          Before updating the histogram, raw camera pixels traverse four embedded computer vision stages designed to resist ceiling glare and reflections:
+          Before updating the histogram, raw camera pixels traverse four embedded computer vision stages designed to
+          resist ceiling glare and reflections:
         </p>
         <p class="prose" data-lang-block="it">
-          Prima di aggiornare l'istogramma, i pixel della telecamera attraversano quattro stadi di computer vision pensati per resistere ai riflessi ambientali:
+          Prima di aggiornare l'istogramma, i pixel della telecamera attraversano quattro stadi di computer vision
+          pensati per resistere ai riflessi ambientali:
         </p>
 
         <div class="figure-box">
           <svg viewBox="0 0 760 112" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vision voting pipeline">
             <rect x="8" y="22" width="132" height="66" rx="7" fill="#17171b" stroke="rgba(255,255,255,0.16)" />
             <foreignObject x="12" y="30" width="124" height="24">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#f4f4f6;font-weight:700;">1. \(\mathrm{RGB} \rightarrow \mathrm{HSV}\)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#f4f4f6;font-weight:700;">1.
+                \(\mathrm{RGB} \rightarrow \mathrm{HSV}\)</div>
             </foreignObject>
-            <text x="74" y="70" text-anchor="middle" fill="#a1a1aa" font-family="Inter, sans-serif" font-size="10.5">Yellow &amp; White Masks</text>
+            <text x="74" y="70" text-anchor="middle" fill="#a1a1aa" font-family="Inter, sans-serif"
+              font-size="10.5">Yellow &amp; White Masks</text>
 
             <line x1="140" y1="55" x2="162" y2="55" stroke="#94a3b8" stroke-width="1.4" />
             <rect x="164" y="22" width="136" height="66" rx="7" fill="#17171b" stroke="rgba(255,255,255,0.16)" />
-            <text x="232" y="48" text-anchor="middle" fill="#f4f4f6" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="700">2. Canny + Hough</text>
-            <text x="232" y="68" text-anchor="middle" fill="#a1a1aa" font-family="Inter, sans-serif" font-size="10.5">~20 Line Segments</text>
+            <text x="232" y="48" text-anchor="middle" fill="#f4f4f6" font-family="JetBrains Mono, monospace"
+              font-size="11.5" font-weight="700">2. Canny + Hough</text>
+            <text x="232" y="68" text-anchor="middle" fill="#a1a1aa" font-family="Inter, sans-serif"
+              font-size="10.5">~20 Line Segments</text>
 
             <line x1="300" y1="55" x2="322" y2="55" stroke="#94a3b8" stroke-width="1.4" />
             <rect x="324" y="22" width="136" height="66" rx="7" fill="#17171b" stroke="#e07a5f" stroke-width="1.3" />
             <foreignObject x="328" y="30" width="128" height="24">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#e07a5f;font-weight:700;">3. \(H_{\text{ground}}\)&nbsp;(\(3\times 3\))</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#e07a5f;font-weight:700;">3.
+                \(H_{\text{ground}}\)&nbsp;(\(3\times 3\))</div>
             </foreignObject>
             <foreignObject x="328" y="56" width="128" height="22">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#a1a1aa;font-size:10px;font-family:Inter,sans-serif;">Pixels \(\rightarrow\) Ground (m)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math"
+                style="color:#a1a1aa;font-size:10px;font-family:Inter,sans-serif;">Pixels \(\rightarrow\) Ground (m)
+              </div>
             </foreignObject>
 
             <line x1="460" y1="55" x2="482" y2="55" stroke="#e07a5f" stroke-width="1.4" />
             <rect x="484" y="22" width="132" height="66" rx="7" fill="#17171b" stroke="#e07a5f" stroke-width="1.3" />
-            <text x="550" y="48" text-anchor="middle" fill="#e07a5f" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="700">4. Generate_Vote</text>
+            <text x="550" y="48" text-anchor="middle" fill="#e07a5f" font-family="JetBrains Mono, monospace"
+              font-size="11.5" font-weight="700">4. Generate_Vote</text>
             <foreignObject x="488" y="56" width="124" height="22">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#a1a1aa;font-size:10.5px;font-family:Inter,sans-serif;">Accumulate&nbsp;\(L(d, \varphi)\)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math"
+                style="color:#a1a1aa;font-size:10.5px;font-family:Inter,sans-serif;">Accumulate&nbsp;\(L(d, \varphi)\)
+              </div>
             </foreignObject>
 
             <line x1="616" y1="55" x2="638" y2="55" stroke="#ffd000" stroke-width="1.4" />
             <rect x="640" y="22" width="112" height="66" rx="7" fill="#121215" stroke="#ffd000" stroke-width="1.5" />
-            <text x="696" y="48" text-anchor="middle" fill="#ffd000" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="700">Hadamard</text>
+            <text x="696" y="48" text-anchor="middle" fill="#ffd000" font-family="JetBrains Mono, monospace"
+              font-size="11.5" font-weight="700">Hadamard</text>
             <foreignObject x="644" y="56" width="104" height="24">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#ffd000;font-size:10.5px;">\(\eta\,\overline{\operatorname{bel}} \odot L\)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#ffd000;font-size:10.5px;">
+                \(\eta\,\overline{\operatorname{bel}} \odot L\)</div>
             </foreignObject>
           </svg>
-          <div class="figure-caption" data-lang-block="en">Fig. 3.1 — Duckietown Inverse Sensor Model: transforming raw HSV segments through flat-ground homography into discrete \((d, \varphi)\) likelihood votes.</div>
-          <div class="figure-caption" data-lang-block="it">Fig. 3.1 — Modello inverso del sensore su Duckietown: i segmenti HSV proiettati tramite omografia votano le celle \((d, \varphi)\) compatibili.</div>
+          <div class="figure-caption" data-lang-block="en">Fig. 3.1 — Duckietown Inverse Sensor Model: transforming raw
+            HSV segments through flat-ground homography into discrete \((d, \varphi)\) likelihood votes.</div>
+          <div class="figure-caption" data-lang-block="it">Fig. 3.1 — Modello inverso del sensore su Duckietown: i
+            segmenti HSV proiettati tramite omografia votano le celle \((d, \varphi)\) compatibili.</div>
         </div>
 
         <div class="math-display">
           <div class="math-eq-row wide" data-eq-explain="hf-dirac">
-            <div class="math-eq-col">\(\displaystyle \operatorname{bel}(x_t) = \sum_{i=1}^N w_t^i\,\delta(x_t - x^i), \qquad x^i = (d^i, \varphi^i), \qquad \sum_{i=1}^N w_t^i = 1\)</div>
+            <div class="math-eq-col">\(\displaystyle \operatorname{bel}(x_t) = \sum_{i=1}^N w_t^i\,\delta(x_t - x^i),
+              \qquad x^i = (d^i, \varphi^i), \qquad \sum_{i=1}^N w_t^i = 1\)</div>
             <div class="math-eq-tag">(Dirac Belief)</div>
           </div>
           <div class="math-eq-row wide" data-eq-explain="hf-predict">
-            <div class="math-eq-col">\(\displaystyle d_A = \frac{d_L + d_R}{2},\; w = \frac{d_R - d_L}{L}, \qquad d_t = d + d_A\sin(\hat{\varphi}),\; \varphi_t = \varphi + w, \qquad \overline{\operatorname{bel}} = \operatorname{shift}(\operatorname{bel}) * G_{\text{cov\_mask}}\)</div>
+            <div class="math-eq-col">\(\displaystyle d_A = \frac{d_L + d_R}{2},\; w = \frac{d_R - d_L}{L}, \qquad d_t =
+              d + d_A\sin(\hat{\varphi}),\; \varphi_t = \varphi + w, \qquad \overline{\operatorname{bel}} =
+              \operatorname{shift}(\operatorname{bel}) * G_{\text{cov\_mask}}\)</div>
             <div class="math-eq-tag">(histogram_predict)</div>
           </div>
           <div class="math-eq-row wide" data-eq-explain="hf-vote">
-            <div class="math-eq-col">\(\displaystyle \hat{t} = \frac{p_2 - p_1}{\|p_2 - p_1\|},\; \hat{n} = \begin{bmatrix} -t_y \\ t_x \end{bmatrix},\; \varphi_i = \arcsin(t_y), \qquad d_i^{\text{w/y}} = \pm d_{\text{seg}} - w_{\text{paint}} \mp \frac{w_{\text{lane}}}{2}\)</div>
+            <div class="math-eq-col">\(\displaystyle \hat{t} = \frac{p_2 - p_1}{\|p_2 - p_1\|},\; \hat{n} =
+              \begin{bmatrix} -t_y \\ t_x \end{bmatrix},\; \varphi_i = \arcsin(t_y), \qquad d_{\text{seg}} = \frac{\hat{n}\cdot p_1 + \hat{n}\cdot p_2}{2}, \qquad d_i^{\text{w/y}} = \pm
+              d_{\text{seg}} - w_{\text{paint}} \mp \frac{w_{\text{lane}}}{2}\)</div>
             <div class="math-eq-tag">(generate_vote)</div>
           </div>
           <div class="math-eq-row" data-eq-explain="hf-update">
-            <div class="math-eq-col">\(\displaystyle \operatorname{bel}_{i,j} = \frac{\overline{\operatorname{bel}}_{i,j} \odot {\color{#e07a5f} L_{i,j}}}{\sum_{u,v} \overline{\operatorname{bel}}_{u,v} \odot L_{u,v}}\)</div>
+            <div class="math-eq-col">\(\displaystyle \operatorname{bel}_{i,j} =
+              \frac{\overline{\operatorname{bel}}_{i,j} \odot {\color{#e07a5f} L_{i,j}}}{\sum_{u,v}
+              \overline{\operatorname{bel}}_{u,v} \odot L_{u,v}}\)</div>
             <div class="math-eq-col">\(\displaystyle (d^*, \varphi^*) = \arg\max_{i,j} \operatorname{bel}_{i,j}\)</div>
             <div class="math-eq-tag">(histogram_update)</div>
           </div>
         </div>
 
         <div class="walkthrough-steps">
+          <div class="step-item" style="border-left:2px solid var(--gold);">
+            <div class="step-idx">
+              <span data-lang-block="en">STEP 01 · THE "BATTLESHIP" GRID (<code>histogram_prior</code>)</span>
+              <span data-lang-block="it">PASSO 01 · LA GRIGLIA DI "BATTAGLIA NAVALE" (<code>histogram_prior</code>)</span>
+            </div>
+            <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
+              With eyes closed, the robot only tracks lateral offset \(d\) and heading error \(\varphi\). It builds a discrete grid where each bin \(x^i = (d^i, \varphi^i)\) is a physical pose hypothesis holding probability \(w_t^i\) (concentrated at the bin center via \(\delta(x_t - x^i)\), with total sum \(\sum w_t^i = 1\)).
+            </p>
+            <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
+              A occhi chiusi, al robot bastano due coordinate: spostamento laterale \(d\) e inclinazione del muso \(\varphi\). Costruisce una tabella (come a battaglia navale) in cui ogni casella \(x^i = (d^i, \varphi^i)\) è un'ipotesi fisica con dentro la sua probabilità \(w_t^i\) (concentrata nel centroide tramite \(\delta(x_t - x^i)\), con somma totale \(\sum w_t^i = 1\)).
+            </p>
+          </div>
           <div class="step-item" style="border-left:2px solid var(--slate);">
             <div class="step-idx">
-              <span data-lang-block="en">PHASE 01 · DIRAC GRID, ENCODER SHIFT &amp; GAUSSIAN FILTER</span>
-              <span data-lang-block="it">FASE 01 · GRIGLIA A DELTA DI DIRAC, SHIFT ENCODER &amp; GAUSSIAN FILTER</span>
+              <span data-lang-block="en">STEP 02 · BLIND SHIFT &amp; BLUR SPONGE (<code>histogram_predict</code>)</span>
+              <span data-lang-block="it">PASSO 02 · SHIFT AL BUIO &amp; "SPUGNA SFOCANTE" (<code>histogram_predict</code>)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              In <code>histogram_prior</code>, each cell centroid \(x^i = (d^i, \varphi^i)\) carries weight \(w_t^i\) (\(\operatorname{bel}(x_t) = \sum w_t^i \delta(x_t - x^i)\)). In <code>histogram_predict</code>, left/right wheel encoder ticks give forward arc \(d_A = (d_L + d_R)/2\) and rotation \(w = (d_R - d_L)/L\). Every cell shifts by \((d_A\sin\hat{\varphi},\, w)\), accumulates into new bins, and is blurred by <code>gaussian_filter(..., cov_mask)</code> to model wheel slip.
+              From left/right wheel encoders (\(d_L, d_R\)), the robot computes forward distance \(d_A\) and turn angle \(w\). First it <strong>shifts</strong> the entire table into the new bins (\(\operatorname{shift}(\operatorname{bel})\)), then it passes a <strong>Gaussian blur sponge</strong> (\(* G_{\text{cov\_mask}}\)) so each bin shares part of its weight with neighbors to model wheel slip, producing \(\overline{\operatorname{bel}}\).
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              In <code>histogram_prior</code>, ogni centroide \(x^i = (d^i, \varphi^i)\) porta un peso \(w_t^i\) (\(\operatorname{bel}(x_t) = \sum w_t^i \delta(x_t - x^i)\)). In <code>histogram_predict</code>, i tick degli encoder danno l'avanzamento \(d_A = (d_L + d_R)/2\) e la rotazione \(w = (d_R - d_L)/L\): ogni cella trasla di \((d_A\sin\hat{\varphi},\, w)\) nei nuovi bin e viene sfocata con <code>gaussian_filter(..., cov_mask)</code> per modellare lo slittamento.
+              Dagli encoder delle ruote (\(d_L, d_R\)) il robot calcola avanzamento \(d_A\) e rotazione \(w\). Fa due mosse in fila: prima <strong>sposta la tabella</strong> nelle nuove caselle (\(\operatorname{shift}(\operatorname{bel})\)), poi passa una <strong>"spugna sfocante" gaussiana</strong> (\(* G_{\text{cov\_mask}}\)) in cui ogni casella cede parte della propria probabilità alle vicine per lo slittamento delle ruote, ottenendo la predizione \(\overline{\operatorname{bel}}\).
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--sensor);">
             <div class="step-idx">
-              <span data-lang-block="en">PHASE 02 · GROUND HOMOGRAPHY &amp; TANGENT/NORMAL BASIS</span>
-              <span data-lang-block="it">FASE 02 · OMOGRAFIA AL SUOLO &amp; VERSORI \(\hat{t}, \hat{n}\)</span>
+              <span data-lang-block="en">STEP 03 · FROM 1 SEGMENT TO 1 VOTE (<code>generate_vote</code>)</span>
+              <span data-lang-block="it">PASSO 03 · DA 1 PEZZETTO DI STRISCIA A 1 VOTO (<code>generate_vote</code>)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              Camera pixels are projected onto the flat ground plane via \(H_{\text{ground}}\) into metric segment endpoints \(p_1, p_2\). Inside <code>generate_vote</code>, we compute the unit tangent \(\hat{t} = (p_2 - p_1)/\|p_2 - p_1\|\) and orthogonal normal \(\hat{n} = [-t_y, t_x]^{\top}\): the dot products \(\hat{n}\cdot p_1\) and \(\hat{n}\cdot p_2\) yield perpendicular segment distance \(d_{\text{seg}}\), while \(\varphi_i = \arcsin(t_y)\) recovers lane heading.
+              After \(\mathrm{RGB}\to\mathrm{HSV}\), Canny/Hough, and ground homography \(H_{\text{ground}}\), each segment \((p_1, p_2)\) yields <strong>one single vote \((d_i, \varphi_i)\)</strong>: the unit tangent \(\hat{t}\) gives \(\varphi_i = \arcsin(t_y)\) which <strong>selects the closest column</strong>, while the \(90^\circ\) normal \(\hat{n}\) (\(\hat{n}\cdot p = d_{\text{seg}}\)) minus paint and half-lane gives \(d_i\) which <strong>selects the closest row</strong> — placing <code>+1</code> vote at their intersection cell.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              I pixel della camera vengono proiettati sul pavimento con l'omografia \(H_{\text{ground}}\) ottenendo gli estremi metrici \(p_1, p_2\). Dentro <code>generate_vote</code> calcoliamo il versore tangente \(\hat{t} = (p_2 - p_1)/\|p_2 - p_1\|\) e la normale ortogonale \(\hat{n} = [-t_y, t_x]^{\top}\): il prodotto scalare \(\hat{n}\cdot p\) fornisce la distanza ortogonale \(d_{\text{seg}}\) dal segmento, mentre \(\varphi_i = \arcsin(t_y)\) ricava l'angolo.
-            </p>
-          </div>
-          <div class="step-item" style="border-left:2px solid var(--sensor);">
-            <div class="step-idx">
-              <span data-lang-block="en">PHASE 03 · EDGE THICKNESS (`linewidth`) &amp; LANE CENTER SHIFT</span>
-              <span data-lang-block="it">FASE 03 · SPESSORE VERNICE (`linewidth`) &amp; VOTO IN \(L_{i,j}\)</span>
-            </div>
-            <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              Because real tape lines have finite width, edge detectors hit either the inner or outer border depending on segment direction (\(p_1[0] > p_2[0]\)). <code>generate_vote</code> flips signs accordingly, subtracts paint thickness \(w_{\text{white}}\) or \(w_{\text{yellow}}\), and shifts by \(\pm w_{\text{lane}}/2\) to reach lane center. <code>generate_measurement_likelihood</code> bins all votes into normalized \(L_{i,j}\).
-            </p>
-            <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Poiché le strisce reali hanno uno spessore, Canny aggancia il bordo interno o esterno in base al verso del segmento (\(p_1[0] > p_2[0]\)). <code>generate_vote</code> regola i segni, sottrae lo spessore della vernice \(w_{\text{white}}\) o \(w_{\text{yellow}}\), e trasla di \(\pm w_{\text{lane}}/2\) fino al centro corsia. <code>generate_measurement_likelihood</code> accumula tutti i voti e normalizza \(L_{i,j}\).
+              Dopo \(\mathrm{RGB}\to\mathrm{HSV}\), Canny/Hough e l'omografia a terra \(H_{\text{ground}}\), ogni singolo segmento \((p_1, p_2)\) produce <strong>un solo voto \((d_i, \varphi_i)\)</strong>: la tangente \(\hat{t}\) dà l'angolo \(\varphi_i\) che <strong>sceglie la COLONNA più vicina</strong>, mentre il prodotto scalare con la normale a \(90^\circ\) (\(\hat{n}\cdot p = d_{\text{seg}}\)) meno vernice e mezza corsia dà la distanza \(d_i\) che <strong>sceglie la RIGA più vicina</strong> — piazzando <code>+1</code> voto nella casella all'incrocio.
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--gold);">
             <div class="step-idx">
-              <span data-lang-block="en">PHASE 04 · `np.multiply` (HADAMARD \(\odot\)) &amp; `argmax`</span>
-              <span data-lang-block="it">FASE 04 · `np.multiply` (HADAMARD \(\odot\)) &amp; `argmax`</span>
+              <span data-lang-block="en">STEP 04 · 20-VOTE TABLE \(L\), HADAMARD \(\odot\) &amp; STEERING (<code>histogram_update</code>)</span>
+              <span data-lang-block="it">PASSO 04 · TABELLA DEI 20 VOTI \(L\), HADAMARD \(\odot\) &amp; STERZATA (<code>histogram_update</code>)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              In <code>histogram_update</code>, fusing motion prior \(\overline{\operatorname{bel}}\) with camera likelihood \(L\) is literally <code>np.multiply(belief, likelihood)</code> (cell-by-cell Hadamard product \(\odot\)) divided by <code>np.sum(belief)</code>, requiring <strong>zero matrix inversions</strong>! The highest-weight bin \((d^*, \varphi^*) = \arg\max\) feeds the lane controller, while flat entropy warns of blind intersections.
+              All ~20 segments cast their votes to build camera table \(L\). Fusing wheel prediction \(\overline{\operatorname{bel}}\) with camera table \(L\) is a simple cell-by-cell multiplication (\(\overline{\operatorname{bel}} \odot L\)) followed by normalization (\(\div \sum\)) so the table sums back to \(1\). The winning cell \((d^*, \varphi^*) = \arg\max\) drives the steering correction.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              In <code>histogram_update</code>, fondere la predizione \(\overline{\operatorname{bel}}\) con i voti della camera \(L\) è letteralmente <code>np.multiply(belief, likelihood)</code> (prodotto di Hadamard \(\odot\) cella per cella) diviso <code>np.sum(belief)</code>, con <strong>zero inversioni di matrici</strong>! La cella col picco massimo \((d^*, \varphi^*) = \arg\max\) guida lo sterzo, mentre un picco piatto segnala un incrocio cieco.
+              Tutti i ~20 segmenti della foto depositano il proprio voto formando la tabella della telecamera \(L\). Per fondere ruote (\(\overline{\operatorname{bel}}\)) e telecamera (\(L\)) basta moltiplicare le due tabelle casella per casella (\(\overline{\operatorname{bel}} \odot L\), schiacciando i voti rumorosi isolati) e dividere per la somma totale per tornare al \(100\%\). La casella vincitrice \((d^*, \varphi^*) = \arg\max\) comanda la sterzata.
             </p>
           </div>
         </div>
@@ -982,7 +1200,8 @@
                 <th>Resolution</th>
                 <th>Memory (float64)</th>
                 <th>CPU Latency / Step</th>
-                <th><span data-lang-block="en">Embedded Verdict</span><span data-lang-block="it">Verdetto Embedded</span></th>
+                <th><span data-lang-block="en">Embedded Verdict</span><span data-lang-block="it">Verdetto
+                    Embedded</span></th>
               </tr>
             </thead>
             <tbody>
@@ -990,19 +1209,25 @@
                 <td>\(30 \times 30\) (900)</td>
                 <td>7.2 KB</td>
                 <td>1.8 ms</td>
-                <td><span data-lang-block="en">Ultra-fast, but coarse quantization induces PID steering wobble</span><span data-lang-block="it">Velocissimo, ma la quantizzazione grossolana fa oscillare lo sterzo PID</span></td>
+                <td><span data-lang-block="en">Ultra-fast, but coarse quantization induces PID steering
+                    wobble</span><span data-lang-block="it">Velocissimo, ma la quantizzazione grossolana fa oscillare lo
+                    sterzo PID</span></td>
               </tr>
               <tr>
                 <td><strong>\(60 \times 60\) (3,600)</strong></td>
                 <td><strong>28.8 KB</strong></td>
                 <td><strong>8.2 ms</strong></td>
-                <td><strong><span data-lang-block="en">Duckietown Sweet Spot: smooth 15–30 Hz real-time lane keeping</span><span data-lang-block="it">Compromesso Ottimo Duckietown: fluidità 15–30 Hz in tempo reale</span></strong></td>
+                <td><strong><span data-lang-block="en">Duckietown Sweet Spot: smooth 15–30 Hz real-time lane
+                      keeping</span><span data-lang-block="it">Compromesso Ottimo Duckietown: fluidità 15–30 Hz in tempo
+                      reale</span></strong></td>
               </tr>
               <tr>
                 <td>\(120 \times 120\) (14,400)</td>
                 <td>115.2 KB</td>
                 <td>36.0 ms</td>
-                <td><span data-lang-block="en">4&times; slower blur convolution; bottlenecks onboard Raspberry Pi</span><span data-lang-block="it">Convoluzione 4&times; più lenta; satura la CPU di bordo</span></td>
+                <td><span data-lang-block="en">4&times; slower blur convolution; bottlenecks onboard Raspberry
+                    Pi</span><span data-lang-block="it">Convoluzione 4&times; più lenta; satura la CPU di bordo</span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -1014,52 +1239,31 @@
             <span data-lang-block="it">La Maledizione della Dimensionalità</span>
           </div>
           <p data-lang-block="en">
-            Histogram grids shine on 2D local coordinates (\(60^2 = 3{,}600\) cells). Extending the same grid to a 3-DOF global arena \([x, y, \theta]\) jumps to \(60^3 = 216{,}000\) cells, and adding velocity \([x, y, \theta, v, \omega]\) explodes to \(60^5 = 777.6\text{ million}\) cells! Global 3-DOF localization demands returning to parametric covariances linearizable at each frame: the <strong>Extended Kalman Filter</strong>.
+            Histogram grids shine on 2D local coordinates (\(60^2 = 3{,}600\) cells). Extending the same grid to a 3-DOF
+            global arena \([x, y, \theta]\) jumps to \(60^3 = 216{,}000\) cells, and adding velocity \([x, y, \theta, v,
+            \omega]\) explodes to \(60^5 = 777.6\text{ million}\) cells! Global 3-DOF localization demands returning to
+            parametric covariances linearizable at each frame: the <strong>Extended Kalman Filter</strong>.
           </p>
           <p data-lang-block="it">
-            La griglia è eccellente in 2D locale (\(60^2 = 3{,}600\) celle). Portarla su uno stato globale a 3 GDL \([x, y, \theta]\) richiede \(60^3 = 216{,}000\) celle, e con le velocità \([x, y, \theta, v, \omega]\) esplode a \(60^5 = 777.6\text{ milioni}\)! Per localizzarsi globalmente nello spazio \(\mathrm{SE}(2)\) in tempo reale serve tornare a una covarianza continua linearizzata istante per istante: l'<strong>Extended Kalman Filter</strong>.
+            La griglia è eccellente in 2D locale (\(60^2 = 3{,}600\) celle). Portarla su uno stato globale a 3 GDL \([x,
+            y, \theta]\) richiede \(60^3 = 216{,}000\) celle, e con le velocità \([x, y, \theta, v, \omega]\) esplode a
+            \(60^5 = 777.6\text{ milioni}\)! Per localizzarsi globalmente nello spazio \(\mathrm{SE}(2)\) in tempo reale
+            serve tornare a una covarianza continua linearizzata istante per istante: l'<strong>Extended Kalman
+              Filter</strong>.
           </p>
         </div>
 
         <!-- INTERACTIVE LAB 03: HISTOGRAM FILTER -->
-        <div class="sim-lab" id="lab-hf">
-          <div class="sim-lab-head">
+        <div class="sim-lab cinema-lab" id="lab-hf">
+          <div class="sim-lab-head cn-head">
             <div class="sim-lab-title">
               <span class="sim-lab-tag">LAB 03</span>
-              <span data-lang-block="en">Histogram Lane Filter — Coupled Road Vision &amp; \((d, \varphi)\) Probability Matrix</span>
-              <span data-lang-block="it">Filtro ad Istogramma — Visione Corsia &amp; Matrice \((d, \varphi)\) Accoppiate</span>
+              <span data-lang-block="en">Histogram Lane Filter — \(3\times 3\) Grid Walkthrough</span>
+              <span data-lang-block="it">Filtro ad Istogramma — Ciclo Completo su Griglia \(3\times 3\)</span>
             </div>
+            <div class="cn-head-right" data-cn-head-right></div>
           </div>
-          <div class="sim-body">
-            <div class="sim-canvas-col">
-              <div class="sim-canvas-wrap"><canvas data-sim-canvas></canvas></div>
-              <div class="sim-controls">
-                <div class="sim-btn-row">
-                  <button type="button" class="sim-btn primary" data-sim-play>Pause</button>
-                  <button type="button" class="sim-btn" data-sim-step>Step</button>
-                  <button type="button" class="sim-btn" data-sim-reset>Reset</button>
-                  <button type="button" class="sim-btn" data-sim-hf-blind></button>
-                </div>
-                <label class="sim-speed"><span data-sim-speed-lbl>Speed</span><input type="range" min="0.4" max="2.4" step="0.1" value="1.0" data-sim-speed /></label>
-              </div>
-            </div>
-            <div class="sim-narrator">
-              <div>
-                <div class="phase-timeline" data-sim-timeline>
-                  <div class="phase-step" data-phase-idx="0"></div>
-                  <div class="phase-step" data-phase-idx="1"></div>
-                  <div class="phase-step" data-phase-idx="2"></div>
-                  <div class="phase-step" data-phase-idx="3"></div>
-                </div>
-                <div class="narrator-copy" style="margin-top:14px;">
-                  <h4 data-sim-title></h4>
-                  <p data-sim-desc></p>
-                  <div class="narrator-eq" data-sim-eq></div>
-                </div>
-              </div>
-              <div class="narrator-telemetry" data-sim-telemetry></div>
-            </div>
-          </div>
+          <div data-cn-mount></div>
         </div>
       </section>
 
@@ -1072,10 +1276,16 @@
         </div>
 
         <p class="prose" data-lang-block="en">
-          When a Duckiebot maneuvers around a city grid using differential wheel drives \(v = \tfrac{v_R+v_L}{2}\) and \(\omega = \tfrac{v_R-v_L}{L}\), motion couples heading and translation through trigonometry: \(\dot{x} = v\cos\theta\), \(\dot{y} = v\sin\theta\), \(\dot{\theta} = \omega\). Passing a Gaussian through non-linear functions distorts it out of elliptical symmetry, breaking the standard Kalman Filter.
+          When a Duckiebot maneuvers around a city grid using differential wheel drives \(v = \tfrac{v_R+v_L}{2}\) and
+          \(\omega = \tfrac{v_R-v_L}{L}\), motion couples heading and translation through trigonometry: \(\dot{x} =
+          v\cos\theta\), \(\dot{y} = v\sin\theta\), \(\dot{\theta} = \omega\). Passing a Gaussian through non-linear
+          functions distorts it out of elliptical symmetry, breaking the standard Kalman Filter.
         </p>
         <p class="prose" data-lang-block="it">
-          Quando un Duckiebot naviga globalmente con trazione differenziale \(v = \tfrac{v_R+v_L}{2}\) e \(\omega = \tfrac{v_R-v_L}{L}\), la cinematica accoppia orientamento e traslazione tramite funzioni trigonometriche non lineari: \(\dot{x} = v\cos\theta\), \(\dot{y} = v\sin\theta\), \(\dot{\theta} = \omega\). Trasformare una gaussiana attraverso curve non lineari ne distorce la simmetria ellittica, invalidando il KF classico.
+          Quando un Duckiebot naviga globalmente con trazione differenziale \(v = \tfrac{v_R+v_L}{2}\) e \(\omega =
+          \tfrac{v_R-v_L}{L}\), la cinematica accoppia orientamento e traslazione tramite funzioni trigonometriche non
+          lineari: \(\dot{x} = v\cos\theta\), \(\dot{y} = v\sin\theta\), \(\dot{\theta} = \omega\). Trasformare una
+          gaussiana attraverso curve non lineari ne distorce la simmetria ellittica, invalidando il KF classico.
         </p>
 
         <h3 class="subsec" id="ekf-jacobians">
@@ -1084,19 +1294,30 @@
         </h3>
 
         <p class="prose" data-lang-block="en">
-          Instead of replacing Gaussians with thousands of particles or grid cells, EKF preserves Gaussianity by computing the <strong>first-order tangent hyperplane</strong> (Jacobian derivative matrix) right around the current state mean \(q_t = [x_t, y_t, \theta_t]^{\top}\): exact non-linear functions advance the mean, while analytical Jacobians stretch, rotate, and contract the \(3\times 3\) covariance matrix \(P\).
+          Instead of replacing Gaussians with thousands of particles or grid cells, EKF preserves Gaussianity by
+          computing the <strong>first-order tangent hyperplane</strong> (Jacobian derivative matrix) right around the
+          current state mean \(q_t = [x_t, y_t, \theta_t]^{\top}\): exact non-linear functions advance the mean, while
+          analytical Jacobians stretch, rotate, and contract the \(3\times 3\) covariance matrix \(P\).
         </p>
         <p class="prose" data-lang-block="it">
-          Anziché abbandonare la forma gaussiana, l'EKF approssima localmente ogni funzione non lineare tramite il suo <strong>iperpiano tangente del primo ordine</strong> (matrice Jacobiana) centrato sulla stima corrente \(q_t = [x_t, y_t, \theta_t]^{\top}\): la media avanza con il modello non lineare esatto, mentre gli Jacobiani proiettano, ruotano e contraggono la covarianza \(3\times 3\) \(P\).
+          Anziché abbandonare la forma gaussiana, l'EKF approssima localmente ogni funzione non lineare tramite il suo
+          <strong>iperpiano tangente del primo ordine</strong> (matrice Jacobiana) centrato sulla stima corrente \(q_t =
+          [x_t, y_t, \theta_t]^{\top}\): la media avanza con il modello non lineare esatto, mentre gli Jacobiani
+          proiettano, ruotano e contraggono la covarianza \(3\times 3\) \(P\).
         </p>
 
         <div class="math-display">
           <div class="math-eq-row wide" data-eq-explain="ekf-motion">
-            <div class="math-eq-col">\(\displaystyle \bar{q}_t = f(q_{t-1}, u_t) = \begin{bmatrix} x + v\cos(\theta)\Delta t \\ y + v\sin(\theta)\Delta t \\ \operatorname{wrap}(\theta + \omega\Delta t) \end{bmatrix}\)</div>
+            <div class="math-eq-col">\(\displaystyle \bar{q}_t = f(q_{t-1}, u_t) = \begin{bmatrix} x +
+              v\cos(\theta)\Delta t \\ y + v\sin(\theta)\Delta t \\ \operatorname{wrap}(\theta + \omega\Delta t)
+              \end{bmatrix}\)</div>
             <div class="math-eq-tag">(1. Non-Linear Motion)</div>
           </div>
           <div class="math-eq-row wide" data-eq-explain="ekf-jac">
-            <div class="math-eq-col">\(\displaystyle F_t = \frac{\partial f}{\partial q} = \begin{bmatrix} 1 & 0 & {\color{#ffd000} -v\sin(\theta)\Delta t} \\ 0 & 1 & {\color{#ffd000} v\cos(\theta)\Delta t} \\ 0 & 0 & 1 \end{bmatrix}, \qquad W_t = \frac{\partial f}{\partial u} = \begin{bmatrix} \cos(\theta)\Delta t & 0 \\ \sin(\theta)\Delta t & 0 \\ 0 & \Delta t \end{bmatrix}\)</div>
+            <div class="math-eq-col">\(\displaystyle F_t = \frac{\partial f}{\partial q} = \begin{bmatrix} 1 & 0 &
+              {\color{#ffd000} -v\sin(\theta)\Delta t} \\ 0 & 1 & {\color{#ffd000} v\cos(\theta)\Delta t} \\ 0 & 0 & 1
+              \end{bmatrix}, \qquad W_t = \frac{\partial f}{\partial u} = \begin{bmatrix} \cos(\theta)\Delta t & 0 \\
+              \sin(\theta)\Delta t & 0 \\ 0 & \Delta t \end{bmatrix}\)</div>
             <div class="math-eq-tag">(2. Motion Jacobians)</div>
           </div>
           <div class="math-eq-row wide" data-eq-explain="ekf-cov">
@@ -1104,11 +1325,17 @@
             <div class="math-eq-tag">(3. Prior Covariance)</div>
           </div>
           <div class="math-eq-row wide" data-eq-explain="ekf-meas">
-            <div class="math-eq-col">\(\displaystyle h(q) = \begin{bmatrix} r \\ \phi \end{bmatrix} = \begin{bmatrix} \sqrt{\Delta x^2 + \Delta y^2} \\ {\color{#e07a5f}\operatorname{atan2}(\Delta y, \Delta x) - \theta} \end{bmatrix}, \qquad H_t = \begin{bmatrix} -\dfrac{\Delta x}{r} & -\dfrac{\Delta y}{r} & 0 \\[6pt] \dfrac{\Delta y}{r^2} & -\dfrac{\Delta x}{r^2} & {\color{#e07a5f}-1} \end{bmatrix}\)</div>
+            <div class="math-eq-col">\(\displaystyle h(q) = \begin{bmatrix} r \\ \phi \end{bmatrix} = \begin{bmatrix}
+              \sqrt{\Delta x^2 + \Delta y^2} \\ {\color{#e07a5f}\operatorname{atan2}(\Delta y, \Delta x) - \theta}
+              \end{bmatrix}, \qquad H_t = \begin{bmatrix} -\dfrac{\Delta x}{r} & -\dfrac{\Delta y}{r} & 0 \\[6pt]
+              \dfrac{\Delta y}{r^2} & -\dfrac{\Delta x}{r^2} & {\color{#e07a5f}-1} \end{bmatrix}\)</div>
             <div class="math-eq-tag">(4. Measurement &amp; Jacobian)</div>
           </div>
           <div class="math-eq-row wide" data-eq-explain="ekf-upd">
-            <div class="math-eq-col">\(\displaystyle K_t = \bar{P}_t H_t^{\top} \left(H_t \bar{P}_t H_t^{\top} + R\right)^{-1}, \qquad q_t = \bar{q}_t + K_t \operatorname{wrap}(z_t - h(\bar{q}_t)), \qquad P_t = \tfrac{1}{2}(P_{\text{new}} + P_{\text{new}}^{\top})\)</div>
+            <div class="math-eq-col">\(\displaystyle K_t = \bar{P}_t H_t^{\top} \left(H_t \bar{P}_t H_t^{\top} +
+              R\right)^{-1}, \quad q_t = \bar{q}_t + K_t \operatorname{wrap}(z_t - h(\bar{q}_t)), \quad P_{\text{new}} =
+              (I - K_t H_t)\bar{P}_t, \quad P_t =
+              \tfrac{1}{2}(P_{\text{new}} + P_{\text{new}}^{\top})\)</div>
             <div class="math-eq-tag">(5. EKF Update)</div>
           </div>
         </div>
@@ -1120,10 +1347,19 @@
               <span data-lang-block="it">RIGA 01 · CINEMATICA NON LINEARE DELL'UNICICLO \(f(q, u)\)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              To predict where the mean pose \(\bar{q}_t = [\bar{x}, \bar{y}, \bar{\theta}]^{\top}\) moves, we never approximate: we push \(q_{t-1}\) through the <strong>exact trigonometry</strong> of the robot. Forward speed \(v\) projects onto world axes as \(\Delta x = v\cos(\theta)\Delta t\) and \(\Delta y = v\sin(\theta)\Delta t\), while turn rate \(\omega\) updates heading inside \([-\pi, \pi]\) via \(\operatorname{wrap}(\theta + \omega\Delta t)\).
+              To predict where the mean pose \(\bar{q}_t = [\bar{x}, \bar{y}, \bar{\theta}]^{\top}\) moves, we never
+              approximate: we push \(q_{t-1}\) through the <strong>exact trigonometry</strong> of the robot. Forward
+              displacement \(dX = v\Delta t\) projects onto world axes as \(\Delta x = dX\cos(\theta)\) and \(\Delta y =
+              dX\sin(\theta)\), while turn increment \(dT = \omega\Delta t\) updates heading inside \([-\pi, \pi]\) via
+              \(\operatorname{wrap}(\theta + dT)\).
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Per spostare la posa media \(\bar{q}_t = [\bar{x}, \bar{y}, \bar{\theta}]^{\top}\) non facciamo alcuna approssimazione: usiamo la <strong>trigonometria esatta</strong> del robot. La velocità lineare \(v\) si scompone sugli assi globali in \(\Delta x = v\cos(\theta)\Delta t\) e \(\Delta y = v\sin(\theta)\Delta t\), mentre la velocità angolare \(\omega\) aggiorna l'orientamento mantenendolo in \([-\pi, \pi]\) tramite \(\operatorname{wrap}(\theta + \omega\Delta t)\).
+              Per spostare la posa media \(\bar{q}_t = [\bar{x}, \bar{y}, \bar{\theta}]^{\top}\) non facciamo alcuna
+              approssimazione: usiamo la <strong>trigonometria esatta</strong> del robot. L'avanzamento \(dX = v\Delta
+              t\)
+              si scompone sugli assi globali in \(\Delta x = dX\cos(\theta)\) e \(\Delta y = dX\sin(\theta)\), mentre la
+              rotazione \(dT = \omega\Delta t\) aggiorna l'orientamento mantenendolo in \([-\pi, \pi]\) tramite
+              \(\operatorname{wrap}(\theta + dT)\).
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--gold);">
@@ -1132,10 +1368,22 @@
               <span data-lang-block="it">RIGA 02 · JACOBIANI DEL MOTO \(F_t\) (STATO) E \(W_t\) (COMANDI)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              Unlike a single point, the \(3\times 3\) covariance matrix \(P\) cannot pass through \(\cos\theta\) and \(\sin\theta\) without losing its Gaussian shape. We therefore compute partial derivatives (tangent slopes): \(F_t = \partial f/\partial q\) shows how state errors propagate (notice \(-v\sin(\theta)\Delta t\) and \(v\cos(\theta)\Delta t\) in column 3, meaning a small heading error \(\delta\theta\) swings the robot <strong>sideways</strong> as it drives!). Meanwhile \(W_t = \partial f/\partial u\) maps wheel slip \([\delta v, \delta\omega]^{\top}\) into pose coordinates.
+              Unlike a single point, the \(3\times 3\) covariance matrix \(P\) cannot pass through \(\cos\theta\) and
+              \(\sin\theta\) without losing its Gaussian shape. We therefore compute partial derivatives (tangent
+              slopes): \(F_t = \partial f/\partial q\) shows how state errors propagate (notice \(-dX\sin(\theta)\)
+              and \(dX\cos(\theta)\) in column 3, meaning a small heading error \(\delta\theta\) swings the
+              robot <strong>sideways</strong> as it drives!). Meanwhile \(W_t = \partial f/\partial u\) maps wheel slip
+              into pose coordinates (with \(\Delta t = 1\) when \(u = [dX, dT]^{\top}\) comes directly from encoder
+              ticks).
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              A differenza di un singolo punto, la matrice di covarianza \(3\times 3\) \(P\) non può attraversare \(\cos\theta\) e \(\sin\theta\) restando gaussiana. Calcoliamo allora le derivate parziali (pendenze tangenti): \(F_t = \partial f/\partial q\) dice come si propagano gli errori di stato (nota nella terza colonna \(-v\sin(\theta)\Delta t\) e \(v\cos(\theta)\Delta t\), che spiegano perché un errore sull'angolo \(\theta\) fa sbandare il robot <strong>lateralmente</strong> mentre avanza!). \(W_t = \partial f/\partial u\) traduce invece il rumore dei comandi \([\delta v, \delta\omega]^{\top}\) nello spazio di posa.
+              A differenza di un singolo punto, la matrice di covarianza \(3\times 3\) \(P\) non può attraversare
+              \(\cos\theta\) e \(\sin\theta\) restando gaussiana. Calcoliamo allora le derivate parziali (pendenze
+              tangenti): \(F_t = \partial f/\partial q\) dice come si propagano gli errori di stato (nota nella terza
+              colonna \(-dX\sin(\theta)\) e \(dX\cos(\theta)\), che spiegano perché un errore sull'angolo
+              \(\theta\) fa sbandare il robot <strong>lateralmente</strong> mentre avanza!). \(W_t = \partial f/\partial
+              u\) traduce invece il rumore dei comandi nello spazio di posa (con \(\Delta t = 1\) quando \(u = [dX,
+              dT]^{\top}\) è espresso in incrementi encoder).
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--slate);">
@@ -1144,10 +1392,16 @@
               <span data-lang-block="it">RIGA 03 · PROPAGAZIONE DELLA COVARIANZA \(\bar{P}_t\)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              Armed with linear matrices \(F_t\) and \(W_t\), covariance propagation looks just like linear Kalman: \(F_t P_{t-1} F_t^{\top}\) rotates and stretches the previous uncertainty ellipse along the curved trajectory, while \(W_t Q_t W_t^{\top}\) injects fresh longitudinal and angular wheel-encoder noise \(Q_t\).
+              Armed with linear matrices \(F_t\) and \(W_t\), covariance propagation looks just like linear Kalman:
+              \(F_t P_{t-1} F_t^{\top}\) rotates and stretches the previous uncertainty ellipse along the curved
+              trajectory, while \(W_t Q_t W_t^{\top}\) injects fresh longitudinal and angular wheel-encoder noise
+              \(Q_t\).
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Ottenute le matrici lineari \(F_t\) e \(W_t\), la propagazione dell'incertezza torna identica al Kalman lineare: il termine \(F_t P_{t-1} F_t^{\top}\) ruota e deforma l'ellisse precedente lungo la tangente alla curva, mentre \(W_t Q_t W_t^{\top}\) aggiunge la nuova incertezza \(Q_t\) generata dagli encoder delle ruote.
+              Ottenute le matrici lineari \(F_t\) e \(W_t\), la propagazione dell'incertezza torna identica al Kalman
+              lineare: il termine \(F_t P_{t-1} F_t^{\top}\) ruota e deforma l'ellisse precedente lungo la tangente alla
+              curva, mentre \(W_t Q_t W_t^{\top}\) aggiunge la nuova incertezza \(Q_t\) generata dagli encoder delle
+              ruote.
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--sensor);">
@@ -1156,10 +1410,23 @@
               <span data-lang-block="it">RIGA 04 · MODELLO POLARE APRILTAG \(h(q)\) &amp; JACOBIANO \(H_t\)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              When the camera spots an AprilTag of known map coordinates \((x_{\text{tag}}, y_{\text{tag}})\), we define \(\Delta x = x_{\text{tag}} - x\) and \(\Delta y = y_{\text{tag}} - y\). From predicted pose \(\bar{q}_t\), \(h(\bar{q}_t)\) predicts range \(r = \sqrt{\Delta x^2 + \Delta y^2}\) and relative bearing \(\phi = \operatorname{atan2}(\Delta y, \Delta x) - \theta\). Taking derivatives yields \(H_t = \partial h/\partial q\): row 1 (\(-\Delta x/r, -\Delta y/r, 0\)) points radially toward the tag, while row 2 (\(\Delta y/r^2, -\Delta x/r^2, -1\)) measures tangential bearing sensitivity (which grows as \(1/r\) when close, with \(-1\) coupling robot rotation directly to camera bearing).
+              When the camera spots an AprilTag of known map coordinates \((x_{\text{tag}}, y_{\text{tag}})\), we define
+              \(\Delta x = x_{\text{tag}} - x\) and \(\Delta y = y_{\text{tag}} - y\). From predicted pose
+              \(\bar{q}_t\), \(h(\bar{q}_t)\) predicts range \(r = \sqrt{\Delta x^2 + \Delta y^2}\) and relative bearing
+              \(\phi = \operatorname{atan2}(\Delta y, \Delta x) - \theta\). Taking derivatives yields \(H_t = \partial
+              h/\partial q\): row 1 (\(-\Delta x/r, -\Delta y/r, 0\)) points radially toward the tag, while row 2
+              (\(\Delta y/r^2, -\Delta x/r^2, -1\)) measures tangential bearing sensitivity (which grows as \(1/r\) when
+              close, with \(-1\) coupling robot rotation directly to camera bearing).
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Quando la camera vede un AprilTag di coordinate note \((x_{\text{tag}}, y_{\text{tag}})\) sulla mappa, definiamo \(\Delta x = x_{\text{tag}} - x\) e \(\Delta y = y_{\text{tag}} - y\). Dalla posa predetta \(\bar{q}_t\), \(h(\bar{q}_t)\) calcola distanza attesa \(r = \sqrt{\Delta x^2 + \Delta y^2}\) e angolo relativo \(\phi = \operatorname{atan2}(\Delta y, \Delta x) - \theta\). Derivando rispetto a \((x, y, \theta)\) otteniamo \(H_t = \partial h/\partial q\): la prima riga (\(-\Delta x/r, -\Delta y/r, 0\)) punta lungo il raggio verso il tag, mentre la seconda (\(\Delta y/r^2, -\Delta x/r^2, -1\)) indica la sensibilità angolare (che cresce come \(1/r\) avvicinandosi al tag, con \(-1\) che lega la rotazione del muso \(\theta\) all'angolo visto dalla camera).
+              Quando la camera vede un AprilTag di coordinate note \((x_{\text{tag}}, y_{\text{tag}})\) sulla mappa,
+              definiamo \(\Delta x = x_{\text{tag}} - x\) e \(\Delta y = y_{\text{tag}} - y\). Dalla posa predetta
+              \(\bar{q}_t\), \(h(\bar{q}_t)\) calcola distanza attesa \(r = \sqrt{\Delta x^2 + \Delta y^2}\) e angolo
+              relativo \(\phi = \operatorname{atan2}(\Delta y, \Delta x) - \theta\). Derivando rispetto a \((x, y,
+              \theta)\) otteniamo \(H_t = \partial h/\partial q\): la prima riga (\(-\Delta x/r, -\Delta y/r, 0\)) punta
+              lungo il raggio verso il tag, mentre la seconda (\(\Delta y/r^2, -\Delta x/r^2, -1\)) indica la
+              sensibilità angolare (che cresce come \(1/r\) avvicinandosi al tag, con \(-1\) che lega la rotazione del
+              muso \(\theta\) all'angolo visto dalla camera).
             </p>
           </div>
           <div class="step-item wide" style="border-left:2px solid var(--gold);">
@@ -1168,10 +1435,20 @@
               <span data-lang-block="it">RIGA 05 · GUADAGNO \(K_t\), UPDATE CON WRAP &amp; SIMMETRIZZAZIONE</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              Finally, the \(3\times 2\) Kalman Gain \(K_t = \bar{P}_t H_t^{\top}(H_t \bar{P}_t H_t^{\top} + R)^{-1}\) arbitrates trust between prior covariance \(\bar{P}_t\) and camera noise \(R\), converting the 2D polar surprise \(\operatorname{wrap}(z_t - h(\bar{q}_t))\) into a 3D correction on \([x, y, \theta]^{\top}\). Wrapping the bearing innovation prevents \(\pm 180^{\circ}\) sign-flip explosions, and averaging \(P_t = \tfrac{1}{2}(P_{\text{new}} + P_{\text{new}}^{\top})\) cancels floating-point asymmetry so the breathing \(3\sigma\) ellipse contracts cleanly onto the robot.
+              Finally, the \(3\times 2\) Kalman Gain \(K_t = \bar{P}_t H_t^{\top}(H_t \bar{P}_t H_t^{\top} + R)^{-1}\)
+              arbitrates trust between prior covariance \(\bar{P}_t\) and camera noise \(R\), converting the 2D polar
+              surprise \(\operatorname{wrap}(z_t - h(\bar{q}_t))\) into a 3D correction on \([x, y, \theta]^{\top}\).
+              Wrapping the bearing innovation prevents \(\pm 180^{\circ}\) sign-flip explosions, and averaging \(P_t =
+              \tfrac{1}{2}(P_{\text{new}} + P_{\text{new}}^{\top})\) cancels floating-point asymmetry so the breathing
+              \(3\sigma\) ellipse contracts cleanly onto the robot.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Infine, il guadagno \(3\times 2\) \(K_t = \bar{P}_t H_t^{\top}(H_t \bar{P}_t H_t^{\top} + R)^{-1}\) pesa la fiducia tra l'incertezza predetta \(\bar{P}_t\) e il rumore visivo \(R\), trasformando la sorpresa polare 2D \(\operatorname{wrap}(z_t - h(\bar{q}_t))\) in una correzione 3D su \([x, y, \theta]^{\top}\). Il \(\operatorname{wrap}\) sull'innovazione evita salti distruttivi al confine \(\pm 180^{\circ}\), mentre \(P_t = \tfrac{1}{2}(P_{\text{new}} + P_{\text{new}}^{\top})\) elimina le asimmetrie numeriche permettendo all'ellisse \(3\sigma\) di contrarsi attorno al robot.
+              Infine, il guadagno \(3\times 2\) \(K_t = \bar{P}_t H_t^{\top}(H_t \bar{P}_t H_t^{\top} + R)^{-1}\) pesa
+              la fiducia tra l'incertezza predetta \(\bar{P}_t\) e il rumore visivo \(R\), trasformando la sorpresa
+              polare 2D \(\operatorname{wrap}(z_t - h(\bar{q}_t))\) in una correzione 3D su \([x, y, \theta]^{\top}\).
+              Il \(\operatorname{wrap}\) sull'innovazione evita salti distruttivi al confine \(\pm 180^{\circ}\), mentre
+              \(P_t = \tfrac{1}{2}(P_{\text{new}} + P_{\text{new}}^{\top})\) elimina le asimmetrie numeriche permettendo
+              all'ellisse \(3\sigma\) di contrarsi attorno al robot.
             </p>
           </div>
         </div>
@@ -1182,10 +1459,19 @@
             <span data-lang-block="it">Bug Critico su Robot Reali: La Singolarità di Taglio a \(\pm 180^\circ\)</span>
           </div>
           <p data-lang-block="en">
-            Suppose predicted heading is \(+179^\circ\) and AprilTag bearing sees \(-179^\circ\) (physically <strong>only \(2^\circ\) apart!</strong>). Naive subtraction computes \((+179^\circ) - (-179^\circ) = +358^\circ\), injecting an explosive innovation that violently whips the robot estimate backward. Wrapping every innovation angle via <code>wrap_angle(a)</code> (\((a+\pi) \bmod 2\pi - \pi\)) guarantees shortest-arc updates within \([-\pi, \pi]\). Similarly, enforcing \(P \leftarrow \tfrac{1}{2}(P + P^{\top})\) protects positive-definiteness against floating-point drift.
+            Suppose predicted heading is \(+179^\circ\) and AprilTag bearing sees \(-179^\circ\) (physically
+            <strong>only \(2^\circ\) apart!</strong>). Naive subtraction computes \((+179^\circ) - (-179^\circ) =
+            +358^\circ\), injecting an explosive innovation that violently whips the robot estimate backward. Wrapping
+            every innovation angle via <code>wrap_angle(a)</code> (\((a+\pi) \bmod 2\pi - \pi\)) guarantees shortest-arc
+            updates within \([-\pi, \pi]\). Similarly, enforcing \(P \leftarrow \tfrac{1}{2}(P + P^{\top})\) protects
+            positive-definiteness against floating-point drift.
           </p>
           <p data-lang-block="it">
-            Se l'angolo predetto è \(+179^\circ\) e il sensore AprilTag legge \(-179^\circ\), la distanza fisica reale è <strong>solo \(2^\circ\)</strong>! Una sottrazione ingenua produce \(+358^\circ\), facendo esplodere la correzione di Kalman. Normalizzare ogni innovazione angolare con <code>wrap_angle(a)</code> (\((a+\pi) \bmod 2\pi - \pi\)) garantisce sempre la distanza minima in \([-\pi, \pi]\), mentre \(P \leftarrow \tfrac{1}{2}(P + P^{\top})\) preserva la simmetria definita positiva nel tempo.
+            Se l'angolo predetto è \(+179^\circ\) e il sensore AprilTag legge \(-179^\circ\), la distanza fisica reale è
+            <strong>solo \(2^\circ\)</strong>! Una sottrazione ingenua produce \(+358^\circ\), facendo esplodere la
+            correzione di Kalman. Normalizzare ogni innovazione angolare con <code>wrap_angle(a)</code> (\((a+\pi) \bmod
+            2\pi - \pi\)) garantisce sempre la distanza minima in \([-\pi, \pi]\), mentre \(P \leftarrow \tfrac{1}{2}(P
+            + P^{\top})\) preserva la simmetria definita positiva nel tempo.
           </p>
         </div>
 
@@ -1195,40 +1481,56 @@
         </h3>
 
         <div class="figure-box">
-          <svg viewBox="0 0 760 132" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ROS EKF asynchronous callback flow">
+          <svg viewBox="0 0 760 132" xmlns="http://www.w3.org/2000/svg" role="img"
+            aria-label="ROS EKF asynchronous callback flow">
             <rect x="12" y="14" width="180" height="44" rx="7" fill="#17171b" stroke="#94a3b8" />
-            <text x="102" y="33" text-anchor="middle" fill="#f4f4f6" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">Wheel Encoders (50 Hz)</text>
+            <text x="102" y="33" text-anchor="middle" fill="#f4f4f6" font-family="JetBrains Mono, monospace"
+              font-size="11" font-weight="700">Wheel Encoders (50 Hz)</text>
             <foreignObject x="16" y="36" width="172" height="20">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#94a3b8;font-size:10px;font-family:Inter,sans-serif;">Predict \(\rightarrow F,\, W,\, P\)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math"
+                style="color:#94a3b8;font-size:10px;font-family:Inter,sans-serif;">Predict \(\rightarrow F,\, W,\, P\)
+              </div>
             </foreignObject>
 
             <rect x="12" y="74" width="180" height="44" rx="7" fill="#17171b" stroke="#e07a5f" />
-            <text x="102" y="93" text-anchor="middle" fill="#e07a5f" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">AprilTag Vision (10 Hz)</text>
+            <text x="102" y="93" text-anchor="middle" fill="#e07a5f" font-family="JetBrains Mono, monospace"
+              font-size="11" font-weight="700">AprilTag Vision (10 Hz)</text>
             <foreignObject x="16" y="96" width="172" height="20">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#a1a1aa;font-size:10px;font-family:Inter,sans-serif;">Update \(\rightarrow H,\, K\) (\(\lt 0.02\text{ ms}\))</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math"
+                style="color:#a1a1aa;font-size:10px;font-family:Inter,sans-serif;">Update \(\rightarrow H,\, K\) (\(\lt
+                0.02\text{ ms}\))</div>
             </foreignObject>
 
             <line x1="192" y1="36" x2="262" y2="54" stroke="#94a3b8" stroke-width="1.5" />
             <line x1="192" y1="96" x2="262" y2="78" stroke="#e07a5f" stroke-width="1.5" />
 
             <rect x="266" y="24" width="246" height="84" rx="8" fill="#121215" stroke="#ffd000" stroke-width="1.5" />
-            <text x="389" y="48" text-anchor="middle" fill="#ffd000" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700">ekf_localization_node</text>
+            <text x="389" y="48" text-anchor="middle" fill="#ffd000" font-family="JetBrains Mono, monospace"
+              font-size="12" font-weight="700">ekf_localization_node</text>
             <foreignObject x="272" y="54" width="234" height="22">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#a1a1aa;font-size:10.5px;font-family:Inter,sans-serif;">Thread Mutex Protected \([q, P]\)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math"
+                style="color:#a1a1aa;font-size:10.5px;font-family:Inter,sans-serif;">Thread Mutex Protected \([q, P]\)
+              </div>
             </foreignObject>
             <foreignObject x="270" y="78" width="238" height="24">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#71717a;font-size:9.5px;">\(Q=\operatorname{diag}(0.05^2, 0.08^2),\; R=\operatorname{diag}(0.1^2, 0.05^2)\)</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#71717a;font-size:9.5px;">
+                \(Q=\operatorname{diag}(0.05^2, 0.08^2),\; R=\operatorname{diag}(0.1^2, 0.05^2)\)</div>
             </foreignObject>
 
             <line x1="512" y1="66" x2="562" y2="66" stroke="#ffd000" stroke-width="1.6" />
             <rect x="566" y="34" width="182" height="64" rx="8" fill="#17171b" stroke="rgba(255,255,255,0.2)" />
-            <text x="657" y="58" text-anchor="middle" fill="#f4f4f6" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="700">/pose_estimated + TF</text>
+            <text x="657" y="58" text-anchor="middle" fill="#f4f4f6" font-family="JetBrains Mono, monospace"
+              font-size="11.5" font-weight="700">/pose_estimated + TF</text>
             <foreignObject x="572" y="66" width="170" height="22">
-              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math" style="color:#ffd000;font-size:10.5px;font-family:Inter,sans-serif;">Breathing \(3\sigma\) Ellipses</div>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="svg-math"
+                style="color:#ffd000;font-size:10.5px;font-family:Inter,sans-serif;">Breathing \(3\sigma\) Ellipses
+              </div>
             </foreignObject>
           </svg>
-          <div class="figure-caption" data-lang-block="en">Fig. 4.1 — Asynchronous ROS node decouples high-rate 50 Hz encoder prediction from slower 10 Hz AprilTag polar updates via thread mutexes.</div>
-          <div class="figure-caption" data-lang-block="it">Fig. 4.1 — Nodo ROS asincrono: predizioni odometriche a 50 Hz e correzioni visive AprilTag a 10 Hz condividono \([q, P]\) protetti da mutex.</div>
+          <div class="figure-caption" data-lang-block="en">Fig. 4.1 — Asynchronous ROS node decouples high-rate 50 Hz
+            encoder prediction from slower 10 Hz AprilTag polar updates via thread mutexes.</div>
+          <div class="figure-caption" data-lang-block="it">Fig. 4.1 — Nodo ROS asincrono: predizioni odometriche a 50 Hz
+            e correzioni visive AprilTag a 10 Hz condividono \([q, P]\) protetti da mutex.</div>
         </div>
 
         <div class="split-2">
@@ -1238,10 +1540,13 @@
               <span data-lang-block="it">Regola Pratica: \(Q \gg R\) vs \(R \gg Q\)</span>
             </h4>
             <p data-lang-block="en">
-              Setting \(Q \gg R\) lets EKF trust vision tightly, fast snapping onto AprilTags, yet exposing estimates to camera jitter. Setting \(R \gg Q\) produces buttery smooth tracks, yet introduces sluggish lag whenever wheels slip.
+              Setting \(Q \gg R\) lets EKF trust vision tightly, fast snapping onto AprilTags, yet exposing estimates to
+              camera jitter. Setting \(R \gg Q\) produces buttery smooth tracks, yet introduces sluggish lag whenever
+              wheels slip.
             </p>
             <p data-lang-block="it">
-              Con \(Q \gg R\) il filtro insegue aggressivamente i tag (risposta rapida ma sensibile al jitter visivo). Con \(R \gg Q\) la traiettoria è morbida ma soffre di ritardo se le ruote slittano.
+              Con \(Q \gg R\) il filtro insegue aggressivamente i tag (risposta rapida ma sensibile al jitter visivo).
+              Con \(R \gg Q\) la traiettoria è morbida ma soffre di ritardo se le ruote slittano.
             </p>
           </div>
           <div class="note-panel accent">
@@ -1250,54 +1555,30 @@
               <span data-lang-block="it">Firma Visiva: <span>Ellissi Pulsanti</span></span>
             </h4>
             <p data-lang-block="en">
-              Watch how \(P\) behaves in real time: between visible tags, the \(3\sigma\) ellipse steadily swells and tilts along heading tangent; the moment an AprilTag enters FOV, \(K\) collapses the ellipse tightly back onto the robot.
+              Watch how \(P\) behaves in real time: between visible tags, the \(3\sigma\) ellipse steadily swells and
+              tilts along heading tangent; the moment an AprilTag enters FOV, \(K\) collapses the ellipse tightly back
+              onto the robot.
             </p>
             <p data-lang-block="it">
-              Osserva il comportamento di \(P\) dal vivo: fra un tag e l'altro l'ellisse \(3\sigma\) si espande e ruota lungo il moto; appena entra un AprilTag nel campo visivo, il guadagno \(K\) la fa contrarre di colpo.
+              Osserva il comportamento di \(P\) dal vivo: fra un tag e l'altro l'ellisse \(3\sigma\) si espande e ruota
+              lungo il moto; appena entra un AprilTag nel campo visivo, il guadagno \(K\) la fa contrarre di colpo.
             </p>
           </div>
         </div>
 
         <!-- INTERACTIVE LAB 04: EXTENDED KALMAN FILTER -->
-        <div class="sim-lab" id="lab-ekf">
-          <div class="sim-lab-head">
+        <div class="sim-lab cinema-lab" id="lab-ekf">
+          <div class="sim-lab-head cn-head">
             <div class="sim-lab-title">
               <span class="sim-lab-tag">LAB 04</span>
-              <span data-lang-block="en">Extended Kalman Filter — Non-Linear Unicycle, AprilTag Polar \(h(q)\) &amp; Breathing Ellipses</span>
-              <span data-lang-block="it">Extended Kalman Filter — Uniciclo Non Lineare, AprilTag \((r, \phi)\) &amp; Ellissi Pulsanti</span>
+              <span data-lang-block="en">Extended Kalman Filter — \(\mathrm{SE}(2)\) Jacobians &amp; AprilTag
+                Update</span>
+              <span data-lang-block="it">Extended Kalman Filter — Jacobiani \(\mathrm{SE}(2)\) &amp; Update
+                AprilTag</span>
             </div>
+            <div class="cn-head-right" data-cn-head-right></div>
           </div>
-          <div class="sim-body">
-            <div class="sim-canvas-col">
-              <div class="sim-canvas-wrap"><canvas data-sim-canvas></canvas></div>
-              <div class="sim-controls">
-                <div class="sim-btn-row">
-                  <button type="button" class="sim-btn primary" data-sim-play>Pause</button>
-                  <button type="button" class="sim-btn" data-sim-step>Step</button>
-                  <button type="button" class="sim-btn" data-sim-reset>Reset</button>
-                  <button type="button" class="sim-btn" data-sim-ekf-blind></button>
-                  <button type="button" class="sim-btn" data-sim-ekf-clear></button>
-                </div>
-                <label class="sim-speed"><span data-sim-speed-lbl>Speed</span><input type="range" min="0.4" max="2.4" step="0.1" value="1.0" data-sim-speed /></label>
-              </div>
-            </div>
-            <div class="sim-narrator">
-              <div>
-                <div class="phase-timeline" data-sim-timeline>
-                  <div class="phase-step" data-phase-idx="0"></div>
-                  <div class="phase-step" data-phase-idx="1"></div>
-                  <div class="phase-step" data-phase-idx="2"></div>
-                  <div class="phase-step" data-phase-idx="3"></div>
-                </div>
-                <div class="narrator-copy" style="margin-top:14px;">
-                  <h4 data-sim-title></h4>
-                  <p data-sim-desc></p>
-                  <div class="narrator-eq" data-sim-eq></div>
-                </div>
-              </div>
-              <div class="narrator-telemetry" data-sim-telemetry></div>
-            </div>
-          </div>
+          <div data-cn-mount></div>
         </div>
       </section>
 
@@ -1310,10 +1591,12 @@
         </div>
 
         <p class="prose" data-lang-block="en">
-          No single Bayesian filter dominates every robotics problem. Selecting the right architecture balances model linearity, global ambiguity, CPU headroom, and state-vector dimensionality:
+          No single Bayesian filter dominates every robotics problem. Selecting the right architecture balances model
+          linearity, global ambiguity, CPU headroom, and state-vector dimensionality:
         </p>
         <p class="prose" data-lang-block="it">
-          Nessun filtro domina ogni scenario robotico: la scelta architetturale nasce sempre dal compromesso fra non linearità, ambiguità globale, risorse CPU e dimensionalità dello stato:
+          Nessun filtro domina ogni scenario robotico: la scelta architetturale nasce sempre dal compromesso fra non
+          linearità, ambiguità globale, risorse CPU e dimensionalità dello stato:
         </p>
 
         <div class="table-wrap">
@@ -1324,7 +1607,8 @@
                 <th>State Space</th>
                 <th>Distribution</th>
                 <th>Cost</th>
-                <th><span data-lang-block="en">Primary Trade-Off &amp; Sweet Spot</span><span data-lang-block="it">Compromesso &amp; Contesto Ottimale</span></th>
+                <th><span data-lang-block="en">Primary Trade-Off &amp; Sweet Spot</span><span
+                    data-lang-block="it">Compromesso &amp; Contesto Ottimale</span></th>
               </tr>
             </thead>
             <tbody>
@@ -1333,28 +1617,35 @@
                 <td>Continuous</td>
                 <td>Unimodal Gaussian</td>
                 <td>\(\mathcal{O}(1)\) (~16 B)</td>
-                <td><span data-lang-block="en">Mathematically optimal BLUE when models are strictly linear.</span><span data-lang-block="it">Ottimo assoluto BLUE se il sistema e i sensori sono lineari.</span></td>
+                <td><span data-lang-block="en">Mathematically optimal BLUE when models are strictly linear.</span><span
+                    data-lang-block="it">Ottimo assoluto BLUE se il sistema e i sensori sono lineari.</span></td>
               </tr>
               <tr>
                 <td><strong>PF (MCL)</strong></td>
                 <td>Continuous / Discrete Map</td>
                 <td>Arbitrary Multi-Modal</td>
                 <td>\(\mathcal{O}(M)\) (~480 KB)</td>
-                <td><span data-lang-block="en">Handles symmetric ambiguity &amp; kidnapping (\(\alpha\)-trick), slower scaling.</span><span data-lang-block="it">Risolve bivi simmetrici e kidnapping (\(\alpha\)-trick), costo lineare in \(M\).</span></td>
+                <td><span data-lang-block="en">Handles symmetric ambiguity &amp; kidnapping (\(\alpha\)-trick), slower
+                    scaling.</span><span data-lang-block="it">Risolve bivi simmetrici e kidnapping (\(\alpha\)-trick),
+                    costo lineare in \(M\).</span></td>
               </tr>
               <tr>
                 <td><strong>HF (Grid)</strong></td>
                 <td>Discretized Fixed Grid</td>
                 <td>Non-Parametric Grid</td>
                 <td>\(\mathcal{O}(N^k)\) (~28.8 KB in 2D)</td>
-                <td><span data-lang-block="en">Jitter-free 2D Duckietown lane keeping; blocked by Curse of Dimensionality in 3D+.</span><span data-lang-block="it">Lane keeping 2D privo di jitter; bloccato in 3D+ dalla crescita esponenziale \(N^k\).</span></td>
+                <td><span data-lang-block="en">Jitter-free 2D Duckietown lane keeping; blocked by Curse of
+                    Dimensionality in 3D+.</span><span data-lang-block="it">Lane keeping 2D privo di jitter; bloccato in
+                    3D+ dalla crescita esponenziale \(N^k\).</span></td>
               </tr>
               <tr>
                 <td><strong>EKF</strong></td>
                 <td>Continuous \(\mathrm{SE}(2) / \mathrm{SE}(3)\)</td>
                 <td>Tangent Linear Gaussian</td>
                 <td>\(\mathcal{O}(n^3)\) (&lt;0.02 ms \(3\times 3\))</td>
-                <td><span data-lang-block="en">Fast 50/10 Hz non-linear Duckiebot global navigation with known AprilTag maps.</span><span data-lang-block="it">Standard veloce 50/10 Hz per navigazione globale \(\mathrm{SE}(2)\) con mappe AprilTag note.</span></td>
+                <td><span data-lang-block="en">Fast 50/10 Hz non-linear Duckiebot global navigation with known AprilTag
+                    maps.</span><span data-lang-block="it">Standard veloce 50/10 Hz per navigazione globale
+                    \(\mathrm{SE}(2)\) con mappe AprilTag note.</span></td>
               </tr>
             </tbody>
           </table>
@@ -1366,10 +1657,17 @@
             <span data-lang-block="it">Oltre la Localizzazione: Controllo &amp; SLAM</span>
           </div>
           <p data-lang-block="en">
-            Clean state estimates \([q, P]\) feed directly downstream into <strong>Planning &amp; Pure Pursuit / LQR Control</strong>, turning uncertain pixel measurements into smooth steering trajectories. And when landmark coordinates \([l_x, l_y]\) are unknown beforehand, expanding the EKF state vector with dynamic landmark slots launches full <strong>Simultaneous Localization and Mapping (SLAM)</strong>, mapping unknown Duckietowns while tracking the robot inside them.
+            Clean state estimates \([q, P]\) feed directly downstream into <strong>Planning &amp; Pure Pursuit / LQR
+              Control</strong>, turning uncertain pixel measurements into smooth steering trajectories. And when
+            landmark coordinates \([l_x, l_y]\) are unknown beforehand, expanding the EKF state vector with dynamic
+            landmark slots launches full <strong>Simultaneous Localization and Mapping (SLAM)</strong>, mapping unknown
+            Duckietowns while tracking the robot inside them.
           </p>
           <p data-lang-block="it">
-            Una stima pulita \([q, P]\) alimenta direttamente a valle i moduli di <strong>Planning e Controllo (PID / Pure Pursuit / LQR)</strong>, trasformando pixel rumorosi in traiettorie fluide. Quando invece la mappa degli AprilTag \([l_x, l_y]\) non è nota a priori, estendere lo stato dell'EKF con le coordinate dei landmark inaugura la <strong>SLAM (Simultaneous Localization and Mapping)</strong>.
+            Una stima pulita \([q, P]\) alimenta direttamente a valle i moduli di <strong>Planning e Controllo (PID /
+              Pure Pursuit / LQR)</strong>, trasformando pixel rumorosi in traiettorie fluide. Quando invece la mappa
+            degli AprilTag \([l_x, l_y]\) non è nota a priori, estendere lo stato dell'EKF con le coordinate dei
+            landmark inaugura la <strong>SLAM (Simultaneous Localization and Mapping)</strong>.
           </p>
         </div>
       </section>
@@ -1387,14 +1685,16 @@
   </footer>
 
   <!-- Modular Simulation Scripts -->
-  <script src="js/sim-core.js"></script>
-  <script src="js/formula-sim.js"></script>
-  <script src="js/formula-sim-bayes-kf.js"></script>
-  <script src="js/formula-sim-pf-hf.js"></script>
-  <script src="js/sim-kf.js"></script>
-  <script src="js/sim-pf.js"></script>
-  <script src="js/sim-hf.js"></script>
-  <script src="js/sim-ekf.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/sim-core.js?v=5"></script>
+  <script src="js/cinema-core.js?v=5"></script>
+  <script src="js/formula-sim.js?v=5"></script>
+  <script src="js/formula-sim-bayes-kf.js?v=5"></script>
+  <script src="js/formula-sim-pf-hf.js?v=5"></script>
+  <script src="js/sim-kf.js?v=5"></script>
+  <script src="js/sim-pf.js?v=5"></script>
+  <script src="js/sim-hf.js?v=9"></script>
+  <script src="js/sim-ekf.js?v=5"></script>
+  <script src="js/app.js?v=9"></script>
 </body>
+
 </html>

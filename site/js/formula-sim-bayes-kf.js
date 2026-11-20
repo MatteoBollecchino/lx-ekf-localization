@@ -101,8 +101,8 @@
           en: '<strong>What to watch:</strong> the prediction integral shifts the prior curve forward by <code>+u_t</code> and <strong>widens/flattens</strong> it according to motion noise <code>σ_u</code>.'
         },
         legend: {
-          it: '<span class="leg-slate">■ Prior bel(x_{t-1})</span><span class="leg-gold">■ Predizione bel̄(x_t)</span>',
-          en: '<span class="leg-slate">■ Prior bel(x_{t-1})</span><span class="leg-gold">■ Predicted bel̄(x_t)</span>'
+          it: '<span class="leg-slate">■ Prior bel(x_{t-1})</span><span class="leg-gold">■ Predizione bel_prior(x_t)</span>',
+          en: '<span class="leg-slate">■ Prior bel(x_{t-1})</span><span class="leg-gold">■ Predicted bel_prior(x_t)</span>'
         },
         presets: {
           it: [
@@ -159,8 +159,8 @@
           en: '<strong>What to watch:</strong> the robot is unsure between two doors (at <code>3 m</code> and <code>7 m</code>). Multiplying by sensor likelihood <span class="leg-coral">p(z|x)</span> kills the wrong door and <span class="leg-gold">η</span> restores area to 1.'
         },
         legend: {
-          it: '<span class="leg-slate">■ Prior bimodale bel̄(x)</span><span class="leg-coral">■ Sensore p(z|x)</span><span class="leg-gold">■ Posteriore η·p·bel̄</span>',
-          en: '<span class="leg-slate">■ Bimodal bel̄(x)</span><span class="leg-coral">■ Likelihood p(z|x)</span><span class="leg-gold">■ Posterior η·p·bel̄</span>'
+          it: '<span class="leg-slate">■ Prior bimodale bel_prior(x)</span><span class="leg-coral">■ Sensore p(z|x)</span><span class="leg-gold">■ Posteriore η·p·bel_prior</span>',
+          en: '<span class="leg-slate">■ Bimodal bel_prior(x)</span><span class="leg-coral">■ Likelihood p(z|x)</span><span class="leg-gold">■ Posterior η·p·bel_prior</span>'
         },
         presets: {
           it: [
@@ -421,8 +421,8 @@
           en: '<strong>What to watch:</strong> during prediction the bell shifts by <code>+u_t</code> while variance <strong>always grows</strong> by <code>+Q</code>, making the gold curve wider and lower than the initial slate curve.'
         },
         legend: {
-          it: '<span class="leg-slate">■ Prior N(μ, Σ)</span><span class="leg-gold">■ Predizione N(μ̄, Σ̄)</span>',
-          en: '<span class="leg-slate">■ Prior N(μ, Σ)</span><span class="leg-gold">■ Predicted N(μ̄, Σ̄)</span>'
+          it: '<span class="leg-slate">■ Prior N(μ, Σ)</span><span class="leg-gold">■ Predizione N(μ_prior, Σ_prior)</span>',
+          en: '<span class="leg-slate">■ Prior N(μ, Σ)</span><span class="leg-gold">■ Predicted N(μ_prior, Σ_prior)</span>'
         },
         presets: {
           it: [
@@ -467,12 +467,12 @@
         defaults: { muBar: 4.0, z: 5.4, sigBar: 0.65, sigR: 0.55 },
         defaultPresetIdx: 0,
         guide: {
-          it: '<strong>Cosa osservare:</strong> la freccia gialla <code>y_t = z_t − Hμ̄_t</code> è la <strong>sorpresa</strong> (distanza tra ciò che legge il sensore e ciò che avevamo predetto), mentre <code>S_t</code> somma le due incertezze.',
-          en: '<strong>What to watch:</strong> the gold arrow <code>y_t = z_t − Hμ̄_t</code> is the <strong>surprise</strong> (gap between sensor reading and prediction), while <code>S_t</code> sums both uncertainties.'
+          it: '<strong>Cosa osservare:</strong> la freccia gialla <code>y_t = z_t − H·μ_prior</code> è la <strong>sorpresa</strong> (distanza tra ciò che legge il sensore e ciò che avevamo predetto), mentre <code>S_t</code> somma le due incertezze.',
+          en: '<strong>What to watch:</strong> the gold arrow <code>y_t = z_t − H·μ_prior</code> is the <strong>surprise</strong> (gap between sensor reading and prediction), while <code>S_t</code> sums both uncertainties.'
         },
         legend: {
-          it: '<span class="leg-blue">■ Predizione μ̄</span><span class="leg-coral">■ Sensore z_t</span><span class="leg-gold">■ Sorpresa y_t = z_t − Hμ̄</span>',
-          en: '<span class="leg-blue">■ Predicted μ̄</span><span class="leg-coral">■ Sensor z_t</span><span class="leg-gold">■ Innovation y_t = z_t − Hμ̄</span>'
+          it: '<span class="leg-blue">■ Predizione μ_prior</span><span class="leg-coral">■ Sensore z_t</span><span class="leg-gold">■ Sorpresa y_t = z_t − H·μ_prior</span>',
+          en: '<span class="leg-blue">■ Predicted μ_prior</span><span class="leg-coral">■ Sensor z_t</span><span class="leg-gold">■ Innovation y_t = z_t − H·μ_prior</span>'
         },
         presets: {
           it: [
@@ -485,7 +485,7 @@
           ]
         },
         sliders: [
-          { key: 'muBar', min: 1.5, max: 6.5, step: 0.1, labelIt: 'Predizione μ̄', labelEn: 'Predicted μ̄', fmt: function (v) { return v.toFixed(1) + ' m'; } },
+          { key: 'muBar', min: 1.5, max: 6.5, step: 0.1, labelIt: 'Predizione μ_prior', labelEn: 'Predicted μ_prior', fmt: function (v) { return v.toFixed(1) + ' m'; } },
           { key: 'z', min: 1.5, max: 8.5, step: 0.1, labelIt: 'Misura z_t', labelEn: 'Sensor z_t', fmt: function (v) { return v.toFixed(1) + ' m'; } },
           { key: 'sigBar', min: 0.3, max: 1.2, step: 0.05, labelIt: 'Std predizione', labelEn: 'Pred std', fmt: function (v) { return v.toFixed(2) + ' m'; } },
           { key: 'sigR', min: 0.25, max: 1.2, step: 0.05, labelIt: 'Std sensore', labelEn: 'Sensor std', fmt: function (v) { return v.toFixed(2) + ' m'; } }
@@ -521,8 +521,8 @@
           en: '<strong>What to watch:</strong> <code>K_t ∈ [0, 1]</code> is the percentage of trust given to the sensor: when sensor noise <code>σ_R</code> is small, <code>K → 1</code>; when <code>σ_R</code> is large, <code>K → 0</code>.'
         },
         legend: {
-          it: '<span class="leg-gold">■ Curva K(R) = Σ̄ / (Σ̄ + R)</span><span class="leg-coral">■ Punto operativo attuale</span>',
-          en: '<span class="leg-gold">■ Curve K(R) = Σ̄ / (Σ̄ + R)</span><span class="leg-coral">■ Current operating point</span>'
+          it: '<span class="leg-gold">■ Curva K(R) = Σ_prior / (Σ_prior + R)</span><span class="leg-coral">■ Punto operativo attuale</span>',
+          en: '<span class="leg-gold">■ Curve K(R) = Σ_prior / (Σ_prior + R)</span><span class="leg-coral">■ Current operating point</span>'
         },
         presets: {
           it: [
@@ -537,7 +537,7 @@
           ]
         },
         sliders: [
-          { key: 'sigBar', min: 0.2, max: 1.3, step: 0.05, labelIt: 'Std predizione (σ_P̄)', labelEn: 'Pred std (σ_P̄)', fmt: function (v) { return v.toFixed(2) + ' m'; } },
+          { key: 'sigBar', min: 0.2, max: 1.3, step: 0.05, labelIt: 'Std predizione (σ_prior)', labelEn: 'Pred std (σ_prior)', fmt: function (v) { return v.toFixed(2) + ' m'; } },
           { key: 'sigR', min: 0.15, max: 1.5, step: 0.05, labelIt: 'Std sensore (σ_R)', labelEn: 'Sensor std (σ_R)', fmt: function (v) { return v.toFixed(2) + ' m'; } }
         ],
         renderEq: function (s, tFrac) {
@@ -612,7 +612,7 @@
           ]
         },
         sliders: [
-          { key: 'muBar', min: 1.5, max: 6.0, step: 0.1, labelIt: 'Predizione μ̄', labelEn: 'Predicted μ̄', fmt: function (v) { return v.toFixed(1) + ' m'; } },
+          { key: 'muBar', min: 1.5, max: 6.0, step: 0.1, labelIt: 'Predizione μ_prior', labelEn: 'Predicted μ_prior', fmt: function (v) { return v.toFixed(1) + ' m'; } },
           { key: 'z', min: 2.0, max: 8.5, step: 0.1, labelIt: 'Sensore z_t', labelEn: 'Sensor z_t', fmt: function (v) { return v.toFixed(1) + ' m'; } },
           { key: 'sigBar', min: 0.3, max: 1.3, step: 0.05, labelIt: 'Std modello', labelEn: 'Prior std', fmt: function (v) { return v.toFixed(2) + ' m'; } },
           { key: 'sigR', min: 0.2, max: 1.2, step: 0.05, labelIt: 'Std sensore', labelEn: 'Sensor std', fmt: function (v) { return v.toFixed(2) + ' m'; } }

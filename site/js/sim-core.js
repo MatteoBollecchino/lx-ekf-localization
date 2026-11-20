@@ -747,6 +747,9 @@
 
   window.LocSims = {
     createLab: createLab,
+    registerCustomLab: function (hooks) {
+      if (hooks) registry.push(hooks);
+    },
     openFormulaInspector: function (snapshot) {
       if (snapshot) showFormulaModal(snapshot);
     },
