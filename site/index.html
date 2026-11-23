@@ -204,46 +204,57 @@
         </div>
 
         <p class="prose" data-lang-block="en">
-          Autonomous mobile robots cannot directly observe their true state vector \(x_t\). Instead, onboard embedded
-          computers must reconstruct a continuous probability distribution, called the <strong>belief</strong>
-          \(\operatorname{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})\), by fusing two imperfect, complementary streams of
-          telemetry:
+          Outdoors, localization is easy because you have GPS. Indoors—inside our miniature Duckietown city—there is no
+          GPS at all, and the robot has no magical sensor that directly says <em>&ldquo;you are at coordinates \((X, Y)\)&rdquo;</em>.
+          Our Duckiebot has to figure out where it is on its own by putting the pieces together. Since it can never be
+          100% sure, it thinks in terms of probability: it maintains a mental map of where it thinks it is—called the
+          <strong>belief</strong> \(\operatorname{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})\)—by combining two
+          different sources of information, neither of which is perfect:
         </p>
         <p class="prose" data-lang-block="it">
-          Un robot mobile autonomo non può osservare direttamente il proprio vettore di stato reale \(x_t\).
-          L'elettronica di bordo deve invece ricostruire una distribuzione di probabilità, chiamata
-          <strong>credenza</strong> \(\operatorname{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})\), fondendo due flussi
-          imperfetti ma complementari:
+          All&rsquo;aperto localizzarsi è facile perché c&rsquo;è il GPS. Al chiuso—dentro la nostra mini-città di
+          Duckietown—il GPS non esiste, e il robot non ha un sensore magico che gli dica direttamente <em>&ldquo;sei alle
+          coordinate \((X, Y)\)&rdquo;</em>. Il Duckiebot deve capirlo da solo mettendo insieme i pezzi. Siccome non può
+          mai esserne sicuro al 100%, ragiona in termini di probabilità: mantiene una mappa mentale di dove pensa di
+          trovarsi—chiamata <strong>credenza (belief)</strong> \(\operatorname{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})\)—combinando
+          due fonti di informazione, nessuna delle quali è perfetta:
         </p>
 
         <div class="split-2">
           <div class="note-panel">
             <h4>
-              <span data-lang-block="en">1. Odometry &amp; Control (\(u_t\)) &rarr; <span>Drift</span></span>
-              <span data-lang-block="it">1. Odometria &amp; Controllo (\(u_t\)) &rarr; <span>Deriva</span></span>
+              <span data-lang-block="en">1. Wheel Sensors / Odometry (\(u_t\)) &rarr; <span>Drift</span></span>
+              <span data-lang-block="it">1. Sensori alle Ruote / Odometria (\(u_t\)) &rarr; <span>Deriva</span></span>
             </h4>
             <p data-lang-block="en">
-              Wheel encoders and IMU increments yield locally smooth motion updates at 50–100 Hz, yet tire slip, uneven
-              floors, and discrete integration trigger <strong>unbounded cumulative drift</strong> over distance.
+              Wheel encoders and IMU tell you how much the wheels have turned and give super fast, continuous updates
+              (50–100 Hz). <strong>The problem:</strong> wheels slip on the floor. The motor spins, but the tire slips a
+              tiny bit. The further you drive, the more these micro-errors add up into an <strong>ever-growing
+              drift</strong> until you think you are somewhere completely different from reality.
             </p>
             <p data-lang-block="it">
-              Encoder sulle ruote e IMU forniscono stime di moto fluide ad alta frequenza (50–100 Hz), ma slittamenti e
-              discrepanze meccaniche generano una <strong>deriva cumulativa illimitata</strong> nel tempo.
+              Encoder sulle ruote e IMU dicono di quanto hanno girato le ruote e danno aggiornamenti continui e
+              velocissimi (50–100 Hz). <strong>Il problema:</strong> le ruote slittano sul pavimento. Il motore gira, ma
+              lo pneumatico perde un filo di aderenza: più guidi lontano, più questi micro-errori si sommano in una
+              <strong>deriva continua</strong>, finché il robot pensa di essere tutt&rsquo;altrove rispetto alla realtà.
             </p>
           </div>
           <div class="note-panel accent">
             <h4>
-              <span data-lang-block="en">2. Exteroceptive Sensors (\(z_t\)) &rarr; <span>Jitter</span></span>
-              <span data-lang-block="it">2. Sensori Esterocettivi (\(z_t\)) &rarr; <span>Rumore / Jitter</span></span>
+              <span data-lang-block="en">2. External Sensors / Camera (\(z_t\)) &rarr; <span>Jitter</span></span>
+              <span data-lang-block="it">2. Sensori Esterni / Telecamera (\(z_t\)) &rarr; <span>Jitter</span></span>
             </h4>
             <p data-lang-block="en">
-              Cameras, LiDAR, or AprilTag detectors measure world references with <strong>zero long-term drift</strong>,
-              but arrive slower (10–15 Hz), stall under occlusion, and carry high-frequency Gaussian jitter or outliers.
+              External sensors (cameras, AprilTags, LiDAR) look at the environment and give real-world references, so
+              they have <strong>zero long-term drift</strong>. <strong>The problem:</strong> they are slower than the
+              wheels (10–15 Hz) and very <strong>jittery</strong>—a simple light reflection, occlusion, or electronic
+              noise makes the reading jump left and right.
             </p>
             <p data-lang-block="it">
-              Telecamere, LiDAR o AprilTag ancorano il robot al mondo con <strong>deriva nulla nel lungo
-                periodo</strong>, ma operano a bassa frequenza (10–15 Hz), falliscono per occlusioni e soffrono di
-              rumore istantaneo (jitter).
+              I sensori esterni (telecamera, AprilTag, LiDAR) guardano l&rsquo;ambiente e danno riferimenti reali, quindi
+              hanno <strong>deriva nulla nel tempo</strong>. <strong>Il problema:</strong> sono più lenti delle ruote
+              (10–15 Hz) e molto <strong>ballerini (jitter)</strong>: basta un riflesso di luce, un&rsquo;occlusione o
+              un po&rsquo; di rumore elettronico per far saltare la lettura a destra e a sinistra.
             </p>
           </div>
         </div>
@@ -254,16 +265,19 @@
         </h3>
 
         <p class="prose" data-lang-block="en">
-          Assuming the <strong>Markov property</strong> (future states depend only on present state and control, never
-          on earlier history), optimal localization alternates forever between <em>Prediction</em> (Chapman–Kolmogorov
-          integral) and <em>Measurement Update</em> (Bayes' rule). Before looking at the math, understand
-          <strong>why</strong> the two steps use two completely different operations:
+          To fuse these two streams, the robot endlessly repeats two very simple steps: first a <strong>Prediction</strong>
+          (it moves using the wheel data, widening its uncertainty because it knows wheels slip), then an
+          <strong>Update</strong> (it checks the external sensor, compares what it sees with what it expected to see, and
+          narrows the uncertainty back down). Assuming the <strong>Markov property</strong>, this is the recursive Bayes
+          filter—here is <strong>why</strong> the two steps use two completely different operations:
         </p>
         <p class="prose" data-lang-block="it">
-          Assumendo la <strong>proprietà di Markov</strong> (il futuro dipende solo dallo stato attuale e dal comando,
-          non dalla storia remota), la localizzazione ottima alterna all'infinito <em>Predizione</em> (integrale di
-          Chapman–Kolmogorov) e <em>Aggiornamento</em> (regola di Bayes). Prima di guardare i simboli, capiamo
-          <strong>il perché logico</strong> delle due operazioni:
+          Per fondere queste due fonti, il robot ripete all&rsquo;infinito due passi molto semplici: prima una
+          <strong>Predizione</strong> (si sposta usando i dati delle ruote, ma sapendo che slittano <em>allarga</em> la
+          sua incertezza), poi un <strong>Aggiornamento (Update)</strong> (accende il sensore esterno, confronta ciò che
+          vede con ciò che si aspettava di vedere e <em>restringe</em> di nuovo l&rsquo;incertezza). Assumendo la
+          <strong>proprietà di Markov</strong>, questo è il filtro di Bayes ricorsivo—vediamo <strong>perché</strong> i
+          due passi usano due operazioni completamente diverse:
         </p>
 
         <div class="split-2">
@@ -377,17 +391,20 @@
             <span data-lang-block="it">Perché il Filtro Esatto è Intrattabile</span>
           </div>
           <p data-lang-block="en">
-            Integrating across a continuous multi-dimensional state space \(x_t \in \mathbb{R}^n\) has no closed-form
-            solution in general non-linear worlds. Every practical robotics filter is an architectural approximation of
-            these two lines: assume linearity (<strong>KF</strong>), sample randomly (<strong>PF</strong>), discretize
-            space into bins (<strong>HF</strong>), or linearize tangentially at each step (<strong>EKF</strong>).
+            Computing this probability exactly across the entire continuous space \(x_t \in \mathbb{R}^n\) would be
+            impossible for a small onboard computer like the Duckiebot&rsquo;s—there is no closed-form solution in
+            general non-linear worlds. That is why every practical filter is one of four approximations: assume
+            linearity and Gaussians (<strong>Kalman Filter</strong>), sample randomly (<strong>Particle Filter</strong>),
+            discretize space into a grid (<strong>Histogram Filter</strong>), or linearize locally at each step
+            (<strong>Extended Kalman Filter</strong>).
           </p>
           <p data-lang-block="it">
-            Calcolare quell'integrale su uno spazio continuo \(x_t \in \mathbb{R}^n\) non ammette soluzioni analitiche
-            in ambienti reali non lineari. I quattro filtri di questo modulo rappresentano le quattro grandi strategie
-            d'approssimazione: ipotesi lineari gaussiane (<strong>KF</strong>), campionamento stocastico
-            (<strong>PF</strong>), discretizzazione su griglia (<strong>HF</strong>) o linearizzazione locale ai primi
-            ordini (<strong>EKF</strong>).
+            Calcolare esattamente questa probabilità su tutto lo spazio continuo \(x_t \in \mathbb{R}^n\) sarebbe
+            impossibile per un piccolo computer di bordo come quello del Duckiebot—non esiste una soluzione analitica in
+            ambienti reali non lineari. Ecco perché esistono quattro diverse approssimazioni: assumere linearità e
+            gaussiane (<strong>Kalman Filter</strong>), campionare casualmente (<strong>Particle Filter</strong>),
+            discretizzare lo spazio in una griglia (<strong>Histogram Filter</strong>) o linearizzare localmente a ogni
+            passo (<strong>Extended Kalman Filter</strong>).
           </p>
         </div>
 
