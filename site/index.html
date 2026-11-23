@@ -204,20 +204,25 @@
         </div>
 
         <p class="prose" data-lang-block="en">
-          Outdoors, localization is easy because you have GPS. Indoors—inside our miniature Duckietown city—there is no
-          GPS at all, and the robot has no magical sensor that directly says <em>&ldquo;you are at coordinates \((X, Y)\)&rdquo;</em>.
+          Outdoors, localization is easy because you have GPS. Indoors, inside our miniature Duckietown city, there is
+          no
+          GPS at all, and the robot has no magical sensor that directly says <em>&ldquo;you are at coordinates \((X,
+            Y)\)&rdquo;</em>.
           Our Duckiebot has to figure out where it is on its own by putting the pieces together. Since it can never be
-          100% sure, it thinks in terms of probability: it maintains a mental map of where it thinks it is—called the
-          <strong>belief</strong> \(\operatorname{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})\)—by combining two
+          100% sure, it thinks in terms of probability: it maintains a mental map of where it thinks it is (called the
+          <strong>belief</strong>, \(\operatorname{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})\)) by combining two
           different sources of information, neither of which is perfect:
         </p>
         <p class="prose" data-lang-block="it">
-          All&rsquo;aperto localizzarsi è facile perché c&rsquo;è il GPS. Al chiuso—dentro la nostra mini-città di
-          Duckietown—il GPS non esiste, e il robot non ha un sensore magico che gli dica direttamente <em>&ldquo;sei alle
-          coordinate \((X, Y)\)&rdquo;</em>. Il Duckiebot deve capirlo da solo mettendo insieme i pezzi. Siccome non può
+          All&rsquo;aperto localizzarsi è facile perché c&rsquo;è il GPS. Al chiuso, dentro la nostra mini-città di
+          Duckietown, il GPS non esiste, e il robot non ha un sensore magico che gli dica direttamente <em>&ldquo;sei
+            alle
+            coordinate \((X, Y)\)&rdquo;</em>. Il Duckiebot deve capirlo da solo mettendo insieme i pezzi. Siccome non
+          può
           mai esserne sicuro al 100%, ragiona in termini di probabilità: mantiene una mappa mentale di dove pensa di
-          trovarsi—chiamata <strong>credenza (belief)</strong> \(\operatorname{bel}(x_t) = p(x_t \mid z_{1:t}, u_{1:t})\)—combinando
-          due fonti di informazione, nessuna delle quali è perfetta:
+          trovarsi (chiamata <strong>credenza (belief)</strong>, \(\operatorname{bel}(x_t) = p(x_t \mid z_{1:t},
+          u_{1:t})\))
+          combinando due fonti di informazione, nessuna delle quali è perfetta:
         </p>
 
         <div class="split-2">
@@ -230,7 +235,7 @@
               Wheel encoders and IMU tell you how much the wheels have turned and give super fast, continuous updates
               (50–100 Hz). <strong>The problem:</strong> wheels slip on the floor. The motor spins, but the tire slips a
               tiny bit. The further you drive, the more these micro-errors add up into an <strong>ever-growing
-              drift</strong> until you think you are somewhere completely different from reality.
+                drift</strong> until you think you are somewhere completely different from reality.
             </p>
             <p data-lang-block="it">
               Encoder sulle ruote e IMU dicono di quanto hanno girato le ruote e danno aggiornamenti continui e
@@ -247,11 +252,12 @@
             <p data-lang-block="en">
               External sensors (cameras, AprilTags, LiDAR) look at the environment and give real-world references, so
               they have <strong>zero long-term drift</strong>. <strong>The problem:</strong> they are slower than the
-              wheels (10–15 Hz) and very <strong>jittery</strong>—a simple light reflection, occlusion, or electronic
+              wheels (10–15 Hz) and very <strong>jittery</strong>: a simple light reflection, occlusion, or electronic
               noise makes the reading jump left and right.
             </p>
             <p data-lang-block="it">
-              I sensori esterni (telecamera, AprilTag, LiDAR) guardano l&rsquo;ambiente e danno riferimenti reali, quindi
+              I sensori esterni (telecamera, AprilTag, LiDAR) guardano l&rsquo;ambiente e danno riferimenti reali,
+              quindi
               hanno <strong>deriva nulla nel tempo</strong>. <strong>Il problema:</strong> sono più lenti delle ruote
               (10–15 Hz) e molto <strong>ballerini (jitter)</strong>: basta un riflesso di luce, un&rsquo;occlusione o
               un po&rsquo; di rumore elettronico per far saltare la lettura a destra e a sinistra.
@@ -265,18 +271,20 @@
         </h3>
 
         <p class="prose" data-lang-block="en">
-          To fuse these two streams, the robot endlessly repeats two very simple steps: first a <strong>Prediction</strong>
+          To fuse these two streams, the robot endlessly repeats two very simple steps: first a
+          <strong>Prediction</strong>
           (it moves using the wheel data, widening its uncertainty because it knows wheels slip), then an
-          <strong>Update</strong> (it checks the external sensor, compares what it sees with what it expected to see, and
+          <strong>Update</strong> (it checks the external sensor, compares what it sees with what it expected to see,
+          and
           narrows the uncertainty back down). Assuming the <strong>Markov property</strong>, this is the recursive Bayes
-          filter—here is <strong>why</strong> the two steps use two completely different operations:
+          filter. Here is <strong>why</strong> the two steps use two completely different operations:
         </p>
         <p class="prose" data-lang-block="it">
           Per fondere queste due fonti, il robot ripete all&rsquo;infinito due passi molto semplici: prima una
           <strong>Predizione</strong> (si sposta usando i dati delle ruote, ma sapendo che slittano <em>allarga</em> la
           sua incertezza), poi un <strong>Aggiornamento (Update)</strong> (accende il sensore esterno, confronta ciò che
           vede con ciò che si aspettava di vedere e <em>restringe</em> di nuovo l&rsquo;incertezza). Assumendo la
-          <strong>proprietà di Markov</strong>, questo è il filtro di Bayes ricorsivo—vediamo <strong>perché</strong> i
+          <strong>proprietà di Markov</strong>, questo è il filtro di Bayes ricorsivo. Vediamo <strong>perché</strong> i
           due passi usano due operazioni completamente diverse:
         </p>
 
@@ -392,17 +400,20 @@
           </div>
           <p data-lang-block="en">
             Computing this probability exactly across the entire continuous space \(x_t \in \mathbb{R}^n\) would be
-            impossible for a small onboard computer like the Duckiebot&rsquo;s—there is no closed-form solution in
+            impossible for a small onboard computer like the Duckiebot&rsquo;s, since there is no closed-form solution
+            in
             general non-linear worlds. That is why every practical filter is one of four approximations: assume
-            linearity and Gaussians (<strong>Kalman Filter</strong>), sample randomly (<strong>Particle Filter</strong>),
+            linearity and Gaussians (<strong>Kalman Filter</strong>), sample randomly (<strong>Particle
+              Filter</strong>),
             discretize space into a grid (<strong>Histogram Filter</strong>), or linearize locally at each step
             (<strong>Extended Kalman Filter</strong>).
           </p>
           <p data-lang-block="it">
             Calcolare esattamente questa probabilità su tutto lo spazio continuo \(x_t \in \mathbb{R}^n\) sarebbe
-            impossibile per un piccolo computer di bordo come quello del Duckiebot—non esiste una soluzione analitica in
-            ambienti reali non lineari. Ecco perché esistono quattro diverse approssimazioni: assumere linearità e
-            gaussiane (<strong>Kalman Filter</strong>), campionare casualmente (<strong>Particle Filter</strong>),
+            impossibile per un piccolo computer di bordo come quello del Duckiebot, poiché non esiste una soluzione
+            analitica in ambienti reali non lineari. Ecco perché esistono quattro diverse approssimazioni: assumere
+            linearità e gaussiane (<strong>Kalman Filter</strong>), campionare casualmente (<strong>Particle
+              Filter</strong>),
             discretizzare lo spazio in una griglia (<strong>Histogram Filter</strong>) o linearizzare localmente a ogni
             passo (<strong>Extended Kalman Filter</strong>).
           </p>
@@ -1145,7 +1156,8 @@
           </div>
           <div class="math-eq-row wide" data-eq-explain="hf-vote">
             <div class="math-eq-col">\(\displaystyle \hat{t} = \frac{p_2 - p_1}{\|p_2 - p_1\|},\; \hat{n} =
-              \begin{bmatrix} -t_y \\ t_x \end{bmatrix},\; \varphi_i = \arcsin(t_y), \qquad d_{\text{seg}} = \frac{\hat{n}\cdot p_1 + \hat{n}\cdot p_2}{2}, \qquad d_i^{\text{w/y}} = \pm
+              \begin{bmatrix} -t_y \\ t_x \end{bmatrix},\; \varphi_i = \arcsin(t_y), \qquad d_{\text{seg}} =
+              \frac{\hat{n}\cdot p_1 + \hat{n}\cdot p_2}{2}, \qquad d_i^{\text{w/y}} = \pm
               d_{\text{seg}} - w_{\text{paint}} \mp \frac{w_{\text{lane}}}{2}\)</div>
             <div class="math-eq-tag">(generate_vote)</div>
           </div>
@@ -1162,49 +1174,84 @@
           <div class="step-item" style="border-left:2px solid var(--gold);">
             <div class="step-idx">
               <span data-lang-block="en">STEP 01 · THE "BATTLESHIP" GRID (<code>histogram_prior</code>)</span>
-              <span data-lang-block="it">PASSO 01 · LA GRIGLIA DI "BATTAGLIA NAVALE" (<code>histogram_prior</code>)</span>
+              <span data-lang-block="it">PASSO 01 · LA GRIGLIA DI "BATTAGLIA NAVALE"
+                (<code>histogram_prior</code>)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              With eyes closed, the robot only tracks lateral offset \(d\) and heading error \(\varphi\). It builds a discrete grid where each bin \(x^i = (d^i, \varphi^i)\) is a physical pose hypothesis holding probability \(w_t^i\) (concentrated at the bin center via \(\delta(x_t - x^i)\), with total sum \(\sum w_t^i = 1\)).
+              With eyes closed, the robot only tracks lateral offset \(d\) and heading error \(\varphi\). It builds a
+              discrete grid where each bin \(x^i = (d^i, \varphi^i)\) is a physical pose hypothesis holding probability
+              \(w_t^i\) (concentrated at the bin center via \(\delta(x_t - x^i)\), with total sum \(\sum w_t^i = 1\)).
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              A occhi chiusi, al robot bastano due coordinate: spostamento laterale \(d\) e inclinazione del muso \(\varphi\). Costruisce una tabella (come a battaglia navale) in cui ogni casella \(x^i = (d^i, \varphi^i)\) è un'ipotesi fisica con dentro la sua probabilità \(w_t^i\) (concentrata nel centroide tramite \(\delta(x_t - x^i)\), con somma totale \(\sum w_t^i = 1\)).
+              A occhi chiusi, al robot bastano due coordinate: spostamento laterale \(d\) e inclinazione del muso
+              \(\varphi\). Costruisce una tabella (come a battaglia navale) in cui ogni casella \(x^i = (d^i,
+              \varphi^i)\) è un'ipotesi fisica con dentro la sua probabilità \(w_t^i\) (concentrata nel centroide
+              tramite \(\delta(x_t - x^i)\), con somma totale \(\sum w_t^i = 1\)).
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--slate);">
             <div class="step-idx">
               <span data-lang-block="en">STEP 02 · BLIND SHIFT &amp; BLUR SPONGE (<code>histogram_predict</code>)</span>
-              <span data-lang-block="it">PASSO 02 · SHIFT AL BUIO &amp; "SPUGNA SFOCANTE" (<code>histogram_predict</code>)</span>
+              <span data-lang-block="it">PASSO 02 · SHIFT AL BUIO &amp; "SPUGNA SFOCANTE"
+                (<code>histogram_predict</code>)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              From left/right wheel encoders (\(d_L, d_R\)), the robot computes forward distance \(d_A\) and turn angle \(w\). First it <strong>shifts</strong> the entire table into the new bins (\(\operatorname{shift}(\operatorname{bel})\)), then it passes a <strong>Gaussian blur sponge</strong> (\(* G_{\text{cov\_mask}}\)) so each bin shares part of its weight with neighbors to model wheel slip, producing \(\overline{\operatorname{bel}}\).
+              From left/right wheel encoders (\(d_L, d_R\)), the robot computes forward distance \(d_A\) and turn angle
+              \(w\). First it <strong>shifts</strong> the entire table into the new bins
+              (\(\operatorname{shift}(\operatorname{bel})\)), then it passes a <strong>Gaussian blur sponge</strong>
+              (\(* G_{\text{cov\_mask}}\)) so each bin shares part of its weight with neighbors to model wheel slip,
+              producing \(\overline{\operatorname{bel}}\).
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Dagli encoder delle ruote (\(d_L, d_R\)) il robot calcola avanzamento \(d_A\) e rotazione \(w\). Fa due mosse in fila: prima <strong>sposta la tabella</strong> nelle nuove caselle (\(\operatorname{shift}(\operatorname{bel})\)), poi passa una <strong>"spugna sfocante" gaussiana</strong> (\(* G_{\text{cov\_mask}}\)) in cui ogni casella cede parte della propria probabilità alle vicine per lo slittamento delle ruote, ottenendo la predizione \(\overline{\operatorname{bel}}\).
+              Dagli encoder delle ruote (\(d_L, d_R\)) il robot calcola avanzamento \(d_A\) e rotazione \(w\). Fa due
+              mosse in fila: prima <strong>sposta la tabella</strong> nelle nuove caselle
+              (\(\operatorname{shift}(\operatorname{bel})\)), poi passa una <strong>"spugna sfocante" gaussiana</strong>
+              (\(* G_{\text{cov\_mask}}\)) in cui ogni casella cede parte della propria probabilità alle vicine per lo
+              slittamento delle ruote, ottenendo la predizione \(\overline{\operatorname{bel}}\).
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--sensor);">
             <div class="step-idx">
               <span data-lang-block="en">STEP 03 · FROM 1 SEGMENT TO 1 VOTE (<code>generate_vote</code>)</span>
-              <span data-lang-block="it">PASSO 03 · DA 1 PEZZETTO DI STRISCIA A 1 VOTO (<code>generate_vote</code>)</span>
+              <span data-lang-block="it">PASSO 03 · DA 1 PEZZETTO DI STRISCIA A 1 VOTO
+                (<code>generate_vote</code>)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              After \(\mathrm{RGB}\to\mathrm{HSV}\), Canny/Hough, and ground homography \(H_{\text{ground}}\), each segment \((p_1, p_2)\) yields <strong>one single vote \((d_i, \varphi_i)\)</strong>: the unit tangent \(\hat{t}\) gives \(\varphi_i = \arcsin(t_y)\) which <strong>selects the closest column</strong>, while the \(90^\circ\) normal \(\hat{n}\) (\(\hat{n}\cdot p = d_{\text{seg}}\)) minus paint and half-lane gives \(d_i\) which <strong>selects the closest row</strong>, placing <code>+1</code> vote at their intersection cell.
+              After \(\mathrm{RGB}\to\mathrm{HSV}\), Canny/Hough, and ground homography \(H_{\text{ground}}\), each
+              segment \((p_1, p_2)\) yields <strong>one single vote \((d_i, \varphi_i)\)</strong>: the unit tangent
+              \(\hat{t}\) gives \(\varphi_i = \arcsin(t_y)\) which <strong>selects the closest column</strong>, while
+              the \(90^\circ\) normal \(\hat{n}\) (\(\hat{n}\cdot p = d_{\text{seg}}\)) minus paint and half-lane gives
+              \(d_i\) which <strong>selects the closest row</strong>, placing <code>+1</code> vote at their intersection
+              cell.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Dopo \(\mathrm{RGB}\to\mathrm{HSV}\), Canny/Hough e l'omografia a terra \(H_{\text{ground}}\), ogni singolo segmento \((p_1, p_2)\) produce <strong>un solo voto \((d_i, \varphi_i)\)</strong>: la tangente \(\hat{t}\) dà l'angolo \(\varphi_i\) che <strong>sceglie la COLONNA più vicina</strong>, mentre il prodotto scalare con la normale a \(90^\circ\) (\(\hat{n}\cdot p = d_{\text{seg}}\)) meno vernice e mezza corsia dà la distanza \(d_i\) che <strong>sceglie la RIGA più vicina</strong>, piazzando <code>+1</code> voto nella casella all'incrocio.
+              Dopo \(\mathrm{RGB}\to\mathrm{HSV}\), Canny/Hough e l'omografia a terra \(H_{\text{ground}}\), ogni
+              singolo segmento \((p_1, p_2)\) produce <strong>un solo voto \((d_i, \varphi_i)\)</strong>: la tangente
+              \(\hat{t}\) dà l'angolo \(\varphi_i\) che <strong>sceglie la COLONNA più vicina</strong>, mentre il
+              prodotto scalare con la normale a \(90^\circ\) (\(\hat{n}\cdot p = d_{\text{seg}}\)) meno vernice e mezza
+              corsia dà la distanza \(d_i\) che <strong>sceglie la RIGA più vicina</strong>, piazzando <code>+1</code>
+              voto nella casella all'incrocio.
             </p>
           </div>
           <div class="step-item" style="border-left:2px solid var(--gold);">
             <div class="step-idx">
-              <span data-lang-block="en">STEP 04 · 20-VOTE TABLE \(L\), HADAMARD \(\odot\) &amp; STEERING (<code>histogram_update</code>)</span>
-              <span data-lang-block="it">PASSO 04 · TABELLA DEI 20 VOTI \(L\), HADAMARD \(\odot\) &amp; STERZATA (<code>histogram_update</code>)</span>
+              <span data-lang-block="en">STEP 04 · 20-VOTE TABLE \(L\), HADAMARD \(\odot\) &amp; STEERING
+                (<code>histogram_update</code>)</span>
+              <span data-lang-block="it">PASSO 04 · TABELLA DEI 20 VOTI \(L\), HADAMARD \(\odot\) &amp; STERZATA
+                (<code>histogram_update</code>)</span>
             </div>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="en">
-              All ~20 segments cast their votes to build camera table \(L\). Fusing wheel prediction \(\overline{\operatorname{bel}}\) with camera table \(L\) is a simple cell-by-cell multiplication (\(\overline{\operatorname{bel}} \odot L\)) followed by normalization (\(\div \sum\)) so the table sums back to \(1\). The winning cell \((d^*, \varphi^*) = \arg\max\) drives the steering correction.
+              All ~20 segments cast their votes to build camera table \(L\). Fusing wheel prediction
+              \(\overline{\operatorname{bel}}\) with camera table \(L\) is a simple cell-by-cell multiplication
+              (\(\overline{\operatorname{bel}} \odot L\)) followed by normalization (\(\div \sum\)) so the table sums
+              back to \(1\). The winning cell \((d^*, \varphi^*) = \arg\max\) drives the steering correction.
             </p>
             <p class="prose" style="font-size:13.5px;margin:0;" data-lang-block="it">
-              Tutti i ~20 segmenti della foto depositano il proprio voto formando la tabella della telecamera \(L\). Per fondere ruote (\(\overline{\operatorname{bel}}\)) e telecamera (\(L\)) basta moltiplicare le due tabelle casella per casella (\(\overline{\operatorname{bel}} \odot L\), schiacciando i voti rumorosi isolati) e dividere per la somma totale per tornare al \(100\%\). La casella vincitrice \((d^*, \varphi^*) = \arg\max\) comanda la sterzata.
+              Tutti i ~20 segmenti della foto depositano il proprio voto formando la tabella della telecamera \(L\). Per
+              fondere ruote (\(\overline{\operatorname{bel}}\)) e telecamera (\(L\)) basta moltiplicare le due tabelle
+              casella per casella (\(\overline{\operatorname{bel}} \odot L\), schiacciando i voti rumorosi isolati) e
+              dividere per la somma totale per tornare al \(100\%\). La casella vincitrice \((d^*, \varphi^*) =
+              \arg\max\) comanda la sterzata.
             </p>
           </div>
         </div>
