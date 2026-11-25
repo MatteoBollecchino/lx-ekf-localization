@@ -627,10 +627,129 @@
     updateMathDisplayHints(curLang);
   }
 
+  function initLabKitDialog() {
+    var dialog = document.getElementById('labkit-dialog');
+    if (!dialog) return;
+
+    var triggers = document.querySelectorAll('[data-open-labkit]');
+    var closeBtn = document.getElementById('labkit-close-btn');
+    var form = document.getElementById('labkit-solutions-form');
+    var input = document.getElementById('labkit-code-input');
+    var msgEl = document.getElementById('labkit-code-msg');
+
+    var EXPECTED_SHA256 = 'b2588dbb10006a9e82dddfca980b524dd17bf324b795f4dc61cf2fdf148767ce';
+    var EXPECTED_FNV = '4f626c79';
+
+    function getLang() {
+      return document.body.getAttribute('data-lang') === 'it' ? 'it' : 'en';
+    }
+
+    function updatePlaceholder() {
+      if (!input) return;
+      input.placeholder = getLang() === 'it' ? 'Inserisci codice...' : 'Enter access code...';
+    }
+
+    function setMsg(text, kind) {
+      if (!msgEl) return;
+      msgEl.textContent = text || '';
+      msgEl.className = 'labkit-code-msg' + (kind ? ' ' + kind : '');
+    }
+
+    function openDialog() {
+      updatePlaceholder();
+      setMsg('', '');
+      if (input) input.value = '';
+      if (typeof dialog.showModal === 'function') {
+        dialog.showModal();
+      } else {
+        dialog.setAttribute('open', '');
+      }
+    }
+
+    function closeDialog() {
+      if (typeof dialog.close === 'function') {
+        dialog.close();
+      } else {
+        dialog.removeAttribute('open');
+      }
+    }
+
+    triggers.forEach(function (btn) {
+      btn.addEventListener('click', openDialog);
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeDialog);
+    }
+
+    dialog.addEventListener('click', function (ev) {
+      if (ev.target === dialog) {
+        closeDialog();
+      }
+    });
+
+    function verifyCode(code) {
+      if (window.crypto && window.crypto.subtle && typeof TextEncoder === 'function') {
+        var bytes = new TextEncoder().encode(code);
+        return window.crypto.subtle.digest('SHA-256', bytes).then(function (buf) {
+          var arr = Array.prototype.slice.call(new Uint8Array(buf));
+          var hex = arr
+            .map(function (b) {
+              return b.toString(16).padStart(2, '0');
+            })
+            .join('');
+          return hex === EXPECTED_SHA256;
+        });
+      }
+      var h = 0x811c9dc5;
+      for (var i = 0; i < code.length; i++) {
+        h ^= code.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+      }
+      return Promise.resolve((h >>> 0).toString(16) === EXPECTED_FNV);
+    }
+
+    if (form) {
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var code = input ? input.value.trim() : '';
+        var lang = getLang();
+        if (!code) {
+          setMsg(lang === 'it' ? 'Inserisci il codice di accesso.' : 'Please enter the access code.', 'error');
+          if (input) input.focus();
+          return;
+        }
+        verifyCode(code).then(function (ok) {
+          if (!ok) {
+            setMsg(lang === 'it' ? 'Codice non valido.' : 'Invalid access code.', 'error');
+            if (input) {
+              input.select();
+              input.focus();
+            }
+            return;
+          }
+          setMsg(
+            lang === 'it' ? 'Codice corretto! Avvio del download...' : 'Code accepted! Starting download...',
+            'success'
+          );
+          var filename = 'lx-localization-labkit-solutions-' + code + '.zip';
+          var a = document.createElement('a');
+          a.href = 'downloads/' + filename;
+          a.download = 'lx-localization-labkit-solutions.zip';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          if (input) input.value = '';
+        });
+      });
+    }
+  }
+
   function init() {
     initLanguageSwitch();
     initScrollSpy();
     initStaticEquationInspectors();
+    initLabKitDialog();
     runKaTeX();
     window.addEventListener('load', runKaTeX);
   }

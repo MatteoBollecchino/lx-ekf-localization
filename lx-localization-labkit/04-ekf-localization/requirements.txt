@@ -1,0 +1,7 @@
+# Python dependencies for local inspection/editing of the EKF exercise.
+# Note: The live EKF localization node runs inside ROS + Duckiematrix
+# via Duckietown Shell (dts code build / dts code workbench --sim).
+numpy
+pyyaml
+jupyter
+ipykernel

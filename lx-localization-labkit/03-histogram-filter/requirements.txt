@@ -1,0 +1,9 @@
+numpy
+scipy
+matplotlib
+opencv-python
+pyyaml
+jupyter
+ipykernel
+git+https://github.com/duckietown/lib-dt-computer-vision.git@ente
+git+https://github.com/duckietown/lib-dt-state-estimation.git@ente

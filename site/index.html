@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400..700;1,400..700&family=Ysabeau:wght@500;600;700;800&display=swap" />
-  <link rel="stylesheet" href="styles.css?v=6" />
+  <link rel="stylesheet" href="styles.css?v=7" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
@@ -50,9 +50,20 @@
         </a>
       </nav>
 
-      <div class="lang-switch" role="group" aria-label="Language selector">
-        <button type="button" data-set-lang="en" class="active">EN</button>
-        <button type="button" data-set-lang="it">IT</button>
+      <div class="topbar-actions">
+        <button type="button" class="labkit-trigger-btn" data-open-labkit>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span data-lang-block="en">Lab Kit</span>
+          <span data-lang-block="it">Lab Kit</span>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language selector">
+          <button type="button" data-set-lang="en" class="active">EN</button>
+          <button type="button" data-set-lang="it">IT</button>
+        </div>
       </div>
     </div>
   </header>
@@ -192,6 +203,18 @@
           <span><strong>Authors:</strong> Marco Pietri &amp; Matteo Bollecchino</span>
           <span><strong>Prof.:</strong> Andrea Ceccarelli</span>
           <span><strong>Platform:</strong> Duckietown LX · ROS / Python</span>
+        </div>
+
+        <div class="hero-actions">
+          <button type="button" class="labkit-hero-btn" data-open-labkit>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span data-lang-block="en">Download Lab Kit (.zip)</span>
+            <span data-lang-block="it">Scarica Lab Kit (.zip)</span>
+          </button>
         </div>
       </section>
 
@@ -1748,6 +1771,74 @@
     <div>Marco Pietri &amp; Matteo Bollecchino · Univ. of Florence · Duckietown LX</div>
   </footer>
 
+  <!-- Lab Kit Download Modal -->
+  <dialog id="labkit-dialog" class="labkit-dialog" aria-labelledby="labkit-dialog-title">
+    <div class="labkit-dialog-card">
+      <div class="labkit-dialog-head">
+        <div>
+          <div class="labkit-dialog-kicker">lx-localization-labkit</div>
+          <h3 id="labkit-dialog-title" class="labkit-dialog-title">
+            <span data-lang-block="en">Download Lab Kit</span>
+            <span data-lang-block="it">Scarica Lab Kit</span>
+          </h3>
+        </div>
+        <button type="button" class="labkit-close-btn" id="labkit-close-btn" aria-label="Close">&times;</button>
+      </div>
+
+      <div class="labkit-options">
+        <div class="labkit-option">
+          <div class="labkit-option-head">
+            <h4>
+              <span data-lang-block="en">Vanilla (Exercises)</span>
+              <span data-lang-block="it">Vanilla (Solo Esercizi)</span>
+            </h4>
+            <span class="labkit-badge">OPEN</span>
+          </div>
+          <p data-lang-block="en">
+            All 4 self-contained folders with <code>presentation.ipynb</code>, <code>ekf_template.py</code>,
+            <code>requirements.txt</code>, and local assets. Solutions are excluded.
+          </p>
+          <p data-lang-block="it">
+            Tutte e 4 le cartelle autonome con <code>presentation.ipynb</code>, <code>ekf_template.py</code>,
+            <code>requirements.txt</code> e asset locali. Senza soluzioni.
+          </p>
+          <a href="downloads/lx-localization-labkit-vanilla.zip" download="lx-localization-labkit-vanilla.zip"
+            class="labkit-btn primary">
+            <span data-lang-block="en">Download Vanilla (.zip)</span>
+            <span data-lang-block="it">Scarica Vanilla (.zip)</span>
+          </a>
+        </div>
+
+        <div class="labkit-option solutions">
+          <div class="labkit-option-head">
+            <h4>
+              <span data-lang-block="en">Complete (With Solutions)</span>
+              <span data-lang-block="it">Completo (Con Soluzioni)</span>
+            </h4>
+            <span class="labkit-badge locked">CODE</span>
+          </div>
+          <p data-lang-block="en">
+            Includes all exercises plus <code>solution.ipynb</code> and <code>ekf_solution.py</code>. Enter the
+            access code to unlock the download.
+          </p>
+          <p data-lang-block="it">
+            Include tutti gli esercizi più <code>solution.ipynb</code> ed <code>ekf_solution.py</code>. Inserisci il
+            codice di accesso per sbloccare il download.
+          </p>
+          <form id="labkit-solutions-form" class="labkit-code-form" novalidate>
+            <input type="password" id="labkit-code-input" class="labkit-code-input" inputmode="numeric"
+              autocomplete="off" placeholder="Access code" aria-label="Access code" />
+            <button type="submit" class="labkit-btn secondary">
+              <span data-lang-block="en">Unlock &amp; Download</span>
+              <span data-lang-block="it">Sblocca e Scarica</span>
+            </button>
+          </form>
+          <div id="labkit-code-msg" class="labkit-code-msg" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Modular Simulation Scripts -->
   <script src="js/sim-core.js?v=5"></script>
   <script src="js/cinema-core.js?v=5"></script>
@@ -1758,7 +1849,7 @@
   <script src="js/sim-pf.js?v=5"></script>
   <script src="js/sim-hf.js?v=9"></script>
   <script src="js/sim-ekf.js?v=5"></script>
-  <script src="js/app.js?v=9"></script>
+  <script src="js/app.js?v=10"></script>
 </body>
 
 </html>
