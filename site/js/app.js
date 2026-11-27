@@ -763,7 +763,7 @@
     if (!dlg || typeof dlg.showModal !== 'function') return;
 
     var SCALE = 640;
-    var Y_CENTER = 126;
+    var Y_CENTER = 152;
     var W_LANE = 0.22;
     var W_WHITE = 0.04;
     var W_YELLOW = 0.025;
@@ -775,8 +775,8 @@
     var CASES = {
       w_out: {
         color: 'WHITE',
-        p1x: 340,
-        p2x: 240,
+        p1x: 390,
+        p2x: 290,
         yEdgeWorld: -(W_LANE / 2 + W_WHITE),
         enTitle: 'White Outer Edge',
         itTitle: 'Bordo Esterno Bianco',
@@ -785,8 +785,8 @@
       },
       w_in: {
         color: 'WHITE',
-        p1x: 240,
-        p2x: 340,
+        p1x: 290,
+        p2x: 390,
         yEdgeWorld: -(W_LANE / 2),
         enTitle: 'White Inner Edge',
         itTitle: 'Bordo Interno Bianco',
@@ -795,8 +795,8 @@
       },
       y_out: {
         color: 'YELLOW',
-        p1x: 240,
-        p2x: 340,
+        p1x: 290,
+        p2x: 390,
         yEdgeWorld: +(W_LANE / 2 + W_YELLOW),
         enTitle: 'Yellow Outer Edge',
         itTitle: 'Bordo Esterno Giallo',
@@ -805,8 +805,8 @@
       },
       y_in: {
         color: 'YELLOW',
-        p1x: 340,
-        p2x: 240,
+        p1x: 390,
+        p2x: 290,
         yEdgeWorld: +(W_LANE / 2),
         enTitle: 'Yellow Inner Edge',
         itTitle: 'Bordo Interno Giallo',

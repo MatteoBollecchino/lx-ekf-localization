@@ -580,8 +580,8 @@ ol.clean-list li strong {
 }
 
 dialog.hf-edge-dialog {
-  width: min(720px, calc(100vw - 24px));
-  max-height: calc(100dvh - 32px);
+  width: min(880px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
   margin: auto;
   padding: 18px 20px;
   border-radius: 14px;
