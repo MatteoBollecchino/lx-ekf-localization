@@ -40,6 +40,11 @@
     simTxts.forEach(function (el) {
       el.textContent = simLabel;
     });
+    var helpTxts = document.querySelectorAll('.math-hint-help-txt');
+    var helpLabel = lang === 'it' ? 'Non ti è ancora chiaro? Guarda l\'animazione' : 'Still not clear? Watch edge animation';
+    helpTxts.forEach(function (el) {
+      el.textContent = helpLabel;
+    });
   }
 
   function initLanguageSwitch() {
@@ -569,6 +574,14 @@
         var hint = document.createElement('div');
         hint.className = 'math-display-hint';
         hint.innerHTML = '<span class="narrator-eq-hint-icon">i</span><span class="math-display-hint-text"></span>';
+        if (box.getAttribute('data-hf-edge-help') === 'true') {
+          var helpBtn = document.createElement('button');
+          helpBtn.type = 'button';
+          helpBtn.className = 'math-hint-help-btn';
+          helpBtn.setAttribute('data-open-hf-edge-help', 'true');
+          helpBtn.innerHTML = '<span class="math-hint-help-q">?</span><span class="math-hint-help-txt"></span>';
+          hint.appendChild(helpBtn);
+        }
         box.appendChild(hint);
       }
     });
@@ -745,10 +758,222 @@
     }
   }
 
+  function initHfEdgeDialog() {
+    var dlg = document.getElementById('hf-edge-dialog');
+    if (!dlg || typeof dlg.showModal !== 'function') return;
+
+    var SCALE = 640;
+    var Y_CENTER = 126;
+    var W_LANE = 0.22;
+    var W_WHITE = 0.04;
+    var W_YELLOW = 0.025;
+    var currentCase = 'w_out';
+    var dRobot = 0.0;
+    var pulseTimer = null;
+    var pulsePhase = 0;
+
+    var CASES = {
+      w_out: {
+        color: 'WHITE',
+        p1x: 340,
+        p2x: 240,
+        yEdgeWorld: -(W_LANE / 2 + W_WHITE),
+        enTitle: 'White Outer Edge',
+        itTitle: 'Bordo Esterno Bianco',
+        enRule: 'p1.x > p2.x: segment points backward along the outer paint edge, so it subtracts w_white (0.04 m) and w_lane/2 (0.11 m).',
+        itRule: 'p1.x > p2.x: il segmento punta indietro lungo il bordo esterno, quindi sottrae w_white (0.04 m) e w_lane/2 (0.11 m).'
+      },
+      w_in: {
+        color: 'WHITE',
+        p1x: 240,
+        p2x: 340,
+        yEdgeWorld: -(W_LANE / 2),
+        enTitle: 'White Inner Edge',
+        itTitle: 'Bordo Interno Bianco',
+        enRule: 'p2.x > p1.x: segment points forward, so n_hat flips upward. Code flips sign (-d_seg) and subtracts only w_lane/2.',
+        itRule: 'p2.x > p1.x: il segmento punta avanti e n_hat guarda in su. Il codice inverte il segno (-d_seg) e sottrae solo w_lane/2.'
+      },
+      y_out: {
+        color: 'YELLOW',
+        p1x: 240,
+        p2x: 340,
+        yEdgeWorld: +(W_LANE / 2 + W_YELLOW),
+        enTitle: 'Yellow Outer Edge',
+        itTitle: 'Bordo Esterno Giallo',
+        enRule: 'p2.x > p1.x: outer yellow edge. Subtracts w_yellow (0.025 m) to reach the inner edge, then computes w_lane/2 - d_i.',
+        itRule: 'p2.x > p1.x: bordo esterno giallo. Sottrae w_yellow (0.025 m) per tornare al bordo interno, poi calcola w_lane/2 - d_i.'
+      },
+      y_in: {
+        color: 'YELLOW',
+        p1x: 340,
+        p2x: 240,
+        yEdgeWorld: +(W_LANE / 2),
+        enTitle: 'Yellow Inner Edge',
+        itTitle: 'Bordo Interno Giallo',
+        enRule: 'p1.x > p2.x: inner yellow edge. Flips sign (-d_seg) without subtracting w_yellow, then computes w_lane/2 - d_i.',
+        itRule: 'p1.x > p2.x: bordo interno giallo. Inverte il segno (-d_seg) senza togliere w_yellow, poi calcola w_lane/2 - d_i.'
+      }
+    };
+
+    function renderEdgeState() {
+      var lang = document.body.getAttribute('data-lang') === 'it' ? 'it' : 'en';
+      var c = CASES[currentCase];
+      var yBotSvg = Y_CENTER - dRobot * SCALE;
+      var yEdgeSvg = Y_CENTER - c.yEdgeWorld * SCALE;
+      var forward = c.p2x > c.p1x;
+      var yRel = c.yEdgeWorld - dRobot;
+      var dSeg = forward ? yRel : -yRel;
+
+      var botGrp = document.getElementById('hf-bot-grp');
+      if (botGrp) botGrp.setAttribute('transform', 'translate(150, ' + yBotSvg.toFixed(1) + ')');
+      var dValEl = document.getElementById('hf-edge-dval');
+      if (dValEl) dValEl.textContent = (dRobot >= 0 ? '+' : '') + dRobot.toFixed(2) + ' m';
+
+      var segLine = document.getElementById('hf-seg-line');
+      if (segLine) {
+        segLine.setAttribute('x1', c.p1x);
+        segLine.setAttribute('y1', yEdgeSvg);
+        segLine.setAttribute('x2', c.p2x);
+        segLine.setAttribute('y2', yEdgeSvg);
+      }
+      var p1Dot = document.getElementById('hf-p1-dot');
+      if (p1Dot) {
+        p1Dot.setAttribute('cx', c.p1x);
+        p1Dot.setAttribute('cy', yEdgeSvg);
+      }
+      var lblY = c.color === 'WHITE' ? yEdgeSvg + 14 : yEdgeSvg - 7;
+      var p1Txt = document.getElementById('hf-p1-txt');
+      var p2Txt = document.getElementById('hf-p2-txt');
+      if (p1Txt) {
+        p1Txt.setAttribute('x', c.p1x + (c.p1x > c.p2x ? 4 : -16));
+        p1Txt.setAttribute('y', lblY);
+      }
+      if (p2Txt) {
+        p2Txt.setAttribute('x', c.p2x + (c.p2x > c.p1x ? 6 : -18));
+        p2Txt.setAttribute('y', lblY);
+      }
+
+      var nSvgDir = forward ? -1 : 1;
+      var midX = (c.p1x + c.p2x) / 2;
+      var normLine = document.getElementById('hf-norm-line');
+      var normTxt = document.getElementById('hf-norm-txt');
+      if (normLine) {
+        normLine.setAttribute('x1', midX);
+        normLine.setAttribute('y1', yEdgeSvg);
+        normLine.setAttribute('x2', midX);
+        normLine.setAttribute('y2', yEdgeSvg + nSvgDir * 42);
+      }
+      if (normTxt) {
+        normTxt.setAttribute('x', midX + 6);
+        normTxt.setAttribute('y', yEdgeSvg + nSvgDir * 28);
+      }
+
+      var dg = document.getElementById('hf-dist-guide');
+      var dl = document.getElementById('hf-dist-lbl');
+      if (dg) {
+        dg.setAttribute('y1', yBotSvg);
+        dg.setAttribute('y2', yEdgeSvg);
+      }
+      if (dl) {
+        dl.setAttribute('y', ((yBotSvg + yEdgeSvg) / 2 + 4).toFixed(1));
+        dl.textContent = Math.abs(yRel).toFixed(3) + ' m';
+      }
+
+      var dVote = dSeg;
+      var lines = '';
+      if (c.color === 'WHITE') {
+        if (!forward) {
+          dVote = dSeg - W_WHITE - W_LANE / 2;
+          lines = 'd_seg = ' + dSeg.toFixed(3) + ' m<br/>d_i = ' + dSeg.toFixed(3) + ' - 0.04 - 0.11 = ' + (dVote >= 0 ? '+' : '') + dVote.toFixed(3) + ' m';
+        } else {
+          var dFlip = -dSeg;
+          dVote = dFlip - W_LANE / 2;
+          lines = 'd_seg = ' + dSeg.toFixed(3) + ' m -> flip: ' + dFlip.toFixed(3) + ' m<br/>d_i = ' + dFlip.toFixed(3) + ' - 0.11 = ' + (dVote >= 0 ? '+' : '') + dVote.toFixed(3) + ' m';
+        }
+      } else {
+        if (forward) {
+          var dSub = dSeg - W_YELLOW;
+          dVote = W_LANE / 2 - dSub;
+          lines = 'd_seg = ' + dSeg.toFixed(3) + ' m -> -0.025 = ' + dSub.toFixed(3) + ' m<br/>d_i = 0.11 - ' + dSub.toFixed(3) + ' = ' + (dVote >= 0 ? '+' : '') + dVote.toFixed(3) + ' m';
+        } else {
+          var dFlipY = -dSeg;
+          dVote = W_LANE / 2 - dFlipY;
+          lines = 'd_seg = ' + dSeg.toFixed(3) + ' m -> flip: ' + dFlipY.toFixed(3) + ' m<br/>d_i = 0.11 - ' + dFlipY.toFixed(3) + ' = ' + (dVote >= 0 ? '+' : '') + dVote.toFixed(3) + ' m';
+        }
+      }
+
+      var dirBadge = document.getElementById('hf-dir-badge');
+      if (dirBadge) {
+        dirBadge.textContent = (lang === 'it' ? c.itTitle : c.enTitle) + ' | ' + (forward ? 'p2.x > p1.x' : 'p1.x > p2.x');
+      }
+      var ruleEl = document.getElementById('hf-edge-rule');
+      if (ruleEl) ruleEl.textContent = lang === 'it' ? c.itRule : c.enRule;
+
+      var calcEl = document.getElementById('hf-edge-calc');
+      if (calcEl) {
+        var finalTxt = lang === 'it' ? 'Risultato: d_i = ' : 'Result: d_i = ';
+        calcEl.innerHTML = lines + '<br/><span style="color:#22c55e;font-weight:700;">' + finalTxt + (dVote >= 0 ? '+' : '') + dVote.toFixed(2) + ' m</span>';
+      }
+
+      dlg.querySelectorAll('.hf-edge-btn').forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-hf-case') === currentCase);
+      });
+    }
+
+    document.querySelectorAll('[data-open-hf-edge-help]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        renderEdgeState();
+        dlg.showModal();
+        var allowMotion = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        if (allowMotion && !pulseTimer) {
+          pulseTimer = setInterval(function () {
+            pulsePhase = (pulsePhase + 1) % 2;
+            var seg = document.getElementById('hf-seg-line');
+            if (seg) seg.setAttribute('opacity', pulsePhase === 0 ? '1' : '0.68');
+          }, 600);
+        }
+      });
+    });
+
+    dlg.addEventListener('close', function () {
+      if (pulseTimer) {
+        clearInterval(pulseTimer);
+        pulseTimer = null;
+      }
+      dlg.returnValue = '';
+    });
+
+    if (!('closedBy' in HTMLDialogElement.prototype)) {
+      var outside = function (e) {
+        var r = dlg.getBoundingClientRect();
+        return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+      };
+      var pressedOut = false;
+      dlg.addEventListener('pointerdown', function (e) { pressedOut = outside(e); });
+      dlg.addEventListener('pointerup', function (e) { if (pressedOut && outside(e)) dlg.close(); });
+    }
+
+    dlg.querySelectorAll('.hf-edge-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        currentCase = btn.getAttribute('data-hf-case');
+        renderEdgeState();
+      });
+    });
+
+    var slider = document.getElementById('hf-edge-slider');
+    if (slider) {
+      slider.addEventListener('input', function () {
+        dRobot = parseFloat(slider.value) || 0;
+        renderEdgeState();
+      });
+    }
+  }
+
   function init() {
     initLanguageSwitch();
     initScrollSpy();
     initStaticEquationInspectors();
+    initHfEdgeDialog();
     initLabKitDialog();
     runKaTeX();
     window.addEventListener('load', runKaTeX);
